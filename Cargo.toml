@@ -10,7 +10,16 @@ readme = "README.md"
 homepage = "https://git.cscherr.de/PlexSheep/wordle-analyzer"
 repository = "https://git.cscherr.de/PlexSheep/wordle-analyzer"
 keywords = ["wordle", "benchmark"]
+default-run = "wordle"
 
+[features]
+default = ["game", "bench"]
+game = []
+bench = []
 
 [dependencies]
 
+[[bin]]
+name = "cliwordle"
+path = "src/bin/cliwordle.rs"
+required-features = ["game"]
