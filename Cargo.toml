@@ -1,15 +1,15 @@
 [package]
-name = "template"
+name = "wordle-analyzer"
 version = "0.1.0"
 edition = "2021"
 publish = false
 authors = ["Christoph J. Scherr <software@cscherr.de>"]
 license = "MIT"
-description = "No description yet"
+description = "Play, Analyze and Benchmark Wordle  / Wordle Strategies"
 readme = "README.md"
-homepage = "https://git.cscherr.de/PlexSheep/rs-base"
-repository = "https://git.cscherr.de/PlexSheep/rs-base"
-keywords = ["template"]
+homepage = "https://git.cscherr.de/PlexSheep/wordle-analyzer"
+repository = "https://git.cscherr.de/PlexSheep/wordle-analyzer"
+keywords = ["wordle", "benchmark"]
 
 
 [dependencies]
