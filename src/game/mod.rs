@@ -43,6 +43,38 @@ impl Game {
     }
 }
 
+/// Build and Configure a [`Game`]
+///
+/// This struct is used to build and configure a [`Game`] of Wordle.
+///
+/// ## Examples
+///
+/// [`GameBuilder`] implements [`Default`]. [`Game::builder`] uses [`GameBuilder::default`].
+/// You don't need to set custom values if you accept the defaults.
+///
+/// ```
+/// # use wordle_analyzer::game::*;
+/// # use anyhow::Result;
+/// # fn main() -> Result<()> {
+/// let game: Game = GameBuilder::default()
+///     .build()?;
+/// # Ok(())
+/// # }
+/// ```
+///
+/// ```
+/// # use wordle_analyzer::game::*;
+/// # use anyhow::Result;
+/// # fn main() -> Result<()> {
+/// let game: Game = Game::builder()
+///     .length(5)
+///     .precompute(false)
+///     .max_steps(6)
+///     .build()?;
+/// # Ok(())
+/// # }
+/// ```
+///
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GameBuilder {
     length: usize,
@@ -57,15 +89,28 @@ impl GameBuilder {
             Ok(game)
     }
 
-    /// Sets the precompute of this [`GameBuilder`].
+    /// Should we pre compute all possible answers? This will make startup significantly more
+    /// expensive, but reduce the computing time while playing.
+    ///
+    /// Default is [`false`]
     pub fn precompute(mut self, precompute: bool) -> Self {
         self.precompute = precompute;
         self
     }
 
-    /// Sets the length of this [`GameBuilder`].
+    /// Set the length of words for the game
+    ///
+    /// Default is [`super::DEFAULT_WORD_LENGTH`]
     pub fn length(mut self, length: usize) -> Self {
         self.length = length;
+        self
+    }
+
+    /// Set the amount of guesses per game
+    ///
+    /// Default is [`super::DEFAULT_MAX_STEPS`]
+    pub fn max_steps(mut self, max_steps: usize) -> Self {
+        self.max_steps = max_steps;
         self
     }
 }

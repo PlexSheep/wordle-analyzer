@@ -13,8 +13,9 @@ keywords = ["wordle", "benchmark"]
 default-run = "wordlec"
 
 [features]
-default = ["game", "bench", "tui"]
+default = ["game", "bench", "tui", "solvers"]
 game = []
+solvers = []
 tui = ["game"]
 bench = []
 
