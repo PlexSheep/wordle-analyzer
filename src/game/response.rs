@@ -42,7 +42,7 @@ impl GuessResponse {
             evaluation: status,
             step,
             finish,
-            win
+            win,
         }
     }
 

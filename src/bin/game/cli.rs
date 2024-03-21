@@ -1,19 +1,17 @@
 #![warn(clippy::all)]
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
-use std::io::{Read, Write};
+use std::io::Write;
 
 use anyhow::anyhow;
 use clap::Parser;
 use libpt::log::*;
 use wordle_analyzer::error::GameError;
 use wordle_analyzer::game::response::GuessResponse;
-use wordle_analyzer::game::Game;
+
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 use wordle_analyzer::wlist::word::Word;
 use wordle_analyzer::{self, game};
-
-use colored::Colorize;
 
 #[derive(Parser, Clone, Debug)]
 #[command(version, about, long_about, author)]
@@ -83,7 +81,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_word(cli: &Cli, step: usize) -> anyhow::Result<Word> {
+fn get_word(_cli: &Cli, step: usize) -> anyhow::Result<Word> {
     let mut word = Word::new();
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();

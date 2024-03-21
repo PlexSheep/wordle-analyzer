@@ -7,9 +7,9 @@ pub const DEFAULT_WORD_LENGTH: usize = 5;
 /// Default amount of guesses per game
 pub const DEFAULT_MAX_STEPS: usize = 6;
 
-pub mod error;
 #[cfg(feature = "bench")]
 pub mod bench;
+pub mod error;
 #[cfg(feature = "game")]
 pub mod game;
 #[cfg(feature = "solvers")]
