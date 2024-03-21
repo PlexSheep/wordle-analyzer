@@ -1,9 +1,11 @@
-use crate::wlist::word::{Frequency, Solution, Word};
+use crate::error::*;
+use crate::wlist::word::{Solution, Word};
 use crate::wlist::WordList;
 
-use self::response::GuessResponse;
-
 pub mod response;
+use response::GuessResponse;
+
+use self::response::Status;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Game<WL>
@@ -16,6 +18,7 @@ where
     step: usize,
     solution: Solution,
     wordlist: WL,
+    finished: bool,
 }
 
 impl<WL: WordList> Game<WL> {
@@ -40,15 +43,16 @@ impl<WL: WordList> Game<WL> {
         precompute: bool,
         max_steps: usize,
         wlist: WL,
-    ) -> anyhow::Result<Self> {
+    ) -> GameResult<Self> {
         let solution = wlist.rand_solution();
-        let mut game = Game {
+        let game = Game {
             length,
             precompute,
             max_steps,
-            step: 0,
+            step: 1,
             solution,
             wordlist: wlist,
+            finished: false,
         };
 
         Ok(game)
@@ -56,12 +60,50 @@ impl<WL: WordList> Game<WL> {
 
     pub fn reset(mut self) -> Self {
         self.solution = self.wordlist.rand_solution();
-        self.step = 0;
+        self.step = 1;
+        self.finished = false;
         self
     }
 
-    pub fn guess(&mut self, word: Word) -> anyhow::Result<GuessResponse> {
-        todo!()
+    pub fn guess(&mut self, guess: Word) -> GameResult<GuessResponse> {
+        if guess.len() != self.length {
+            return Err(GameError::GuessHasWrongLength);
+        }
+        if self.finished || self.step > self.max_steps {
+            return Err(GameError::TryingToPlayAFinishedGame);
+        }
+        self.step += 1;
+
+        let mut compare_solution = self.solution.0.clone();
+        let mut evaluation = Vec::new();
+        let mut status: Status;
+        for (idx, c) in guess.chars().enumerate() {
+            if compare_solution.chars().nth(idx) == Some(c) {
+                status = Status::Matched;
+                compare_solution = compare_solution.replace(c, "_");
+            } else if compare_solution.contains(c) {
+                status = Status::Exists;
+                compare_solution = compare_solution.replacen(c, "_", 1);
+            } else {
+                status = Status::None
+            }
+            evaluation.push((c, status));
+        }
+
+        let mut response = GuessResponse::new(guess, evaluation, self.step, self.max_steps);
+        Ok(response)
+    }
+
+    pub fn length(&self) -> usize {
+        self.length
+    }
+
+    pub fn solution(&self) -> &Solution {
+        &self.solution
+    }
+
+    pub fn step(&self) -> usize {
+        self.step
     }
 }
 
@@ -107,7 +149,7 @@ pub struct GameBuilder<WL: WordList> {
 
 impl<WL: WordList> GameBuilder<WL> {
     /// build a [`Game`] with the stored configuration
-    pub fn build(self) -> anyhow::Result<Game<WL>> {
+    pub fn build(self) -> GameResult<Game<WL>> {
         let game: Game<WL> =
             Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
         Ok(game)

@@ -17,22 +17,25 @@ default = ["game", "bench", "tui", "solvers", "builtin_wlist", "serde"]
 builtin_wlist = ["dep:serde_json", "serde"]
 game = ["builtin_wlist"]
 solvers = []
-tui = ["game"]
+tui = ["cli"]
+cli = ["dep:clap"]
 bench = []
 serde = ["dep:serde"]
 
 [dependencies]
 anyhow = "1.0.81"
-clap = { version = "4.5.3", features = ["derive"] }
+clap = { version = "4.5.3", features = ["derive"], optional = true }
+colored = { version = "2.1.0", optional = false }
 libpt = "0.4.2"
 rand = "0.8.5"
 serde = { version = "1.0.197", optional = true, features = ["serde_derive"] }
-serde_json = {version = "1.0.114", optional = true}
+serde_json = { version = "1.0.114", optional = true }
+thiserror = "1.0.58"
 
 [[bin]]
 name = "wordlec"
 path = "src/bin/game/cli.rs"
-required-features = ["game"]
+required-features = ["game", "cli"]
 
 [[bin]]
 name = "wordlet"
