@@ -58,7 +58,7 @@ impl WordMap {
         let len = self.len();
         let mut c: f64 = l_under_sigmoid * (0.5 + self.n_common() as f64 / len as f64);
         c *= 1e-7;
-        debug!(threshold=c);
+        debug!(threshold = c);
         c
     }
     pub fn inner(&self) -> &HashMap<Word, Frequency> {

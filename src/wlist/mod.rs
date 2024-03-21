@@ -1,4 +1,4 @@
-use rand::{seq::IteratorRandom};
+use rand::seq::IteratorRandom;
 
 use std::collections::HashMap;
 use std::ops::RangeBounds;
