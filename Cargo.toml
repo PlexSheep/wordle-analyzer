@@ -13,16 +13,21 @@ keywords = ["wordle", "benchmark"]
 default-run = "wordlec"
 
 [features]
-default = ["game", "bench", "tui", "solvers"]
-game = []
+default = ["game", "bench", "tui", "solvers", "builtin_wlist", "serde"]
+builtin_wlist = ["dep:serde_json", "serde"]
+game = ["builtin_wlist"]
 solvers = []
 tui = ["game"]
 bench = []
+serde = ["dep:serde"]
 
 [dependencies]
 anyhow = "1.0.81"
 clap = { version = "4.5.3", features = ["derive"] }
 libpt = "0.4.2"
+rand = "0.8.5"
+serde = { version = "1.0.197", optional = true, features = ["serde_derive"] }
+serde_json = {version = "1.0.114", optional = true}
 
 [[bin]]
 name = "wordlec"

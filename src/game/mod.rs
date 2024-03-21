@@ -1,15 +1,21 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Game {
+use crate::wlist::WordList;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Game<WL>
+where
+    WL: WordList,
+{
     length: usize,
     precompute: bool,
     max_steps: usize,
     step: usize,
     solution: String,
+    wordlist: WL,
 }
 
-impl Game {
+impl<WL: WordList> Game<WL> {
     /// get a new [`GameBuilder`]
-    pub fn builder() -> GameBuilder {
+    pub fn builder() -> GameBuilder<WL> {
         GameBuilder::default()
     }
     /// Create a [Game] of wordle
@@ -24,22 +30,16 @@ impl Game {
     /// # Errors
     ///
     /// This function will return an error if .
-    pub(crate) fn build(length: usize, precompute: bool, max_steps: usize) -> anyhow::Result<Self> {
+    pub(crate) fn build(length: usize, precompute: bool, max_steps: usize, wlist: WL) -> anyhow::Result<Self> {
         let _game = Game {
             length,
             precompute,
             max_steps,
             step: 0,
             solution: String::default(), // we actually set this later
+            wordlist: wlist
         };
 
-        // TODO: load wordlist of possible answers
-        // TODO: select one as a solution at random
-        // NOTE: The possible answers should be determined with a wordlist that has the
-        // frequencies/probabilities of the words. We then use a sigmoid function to determine if a
-        // word can be a solution based on that value. Only words above some threshold of
-        // commonness will be available as solutions then. Next, we choose one of the allowed words
-        // randomly.
         todo!();
     }
 }
@@ -77,16 +77,17 @@ impl Game {
 /// ```
 ///
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct GameBuilder {
+pub struct GameBuilder<WL: WordList> {
     length: usize,
     precompute: bool,
     max_steps: usize,
+    wordlist: WL
 }
 
-impl GameBuilder {
+impl<WL: WordList> GameBuilder<WL> {
     /// build a [`Game`] with the stored configuration
-    pub fn build(self) -> anyhow::Result<Game> {
-        let game: Game = Game::build(self.length, self.precompute, self.max_steps)?;
+    pub fn build(self) -> anyhow::Result<Game<WL>> {
+        let game: Game<WL> = Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
         Ok(game)
     }
 
@@ -116,12 +117,13 @@ impl GameBuilder {
     }
 }
 
-impl Default for GameBuilder {
+impl<WL: WordList> Default for GameBuilder<WL> {
     fn default() -> Self {
         Self {
             length: super::DEFAULT_WORD_LENGTH,
             precompute: false,
             max_steps: super::DEFAULT_MAX_STEPS,
+            wordlist: WL::default()
         }
     }
 }

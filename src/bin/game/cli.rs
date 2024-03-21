@@ -3,6 +3,8 @@
 #![warn(missing_debug_implementations)]
 use clap::Parser;
 use libpt::log::*;
+use wordle_analyzer::game::Game;
+use wordle_analyzer::wlist::builtin::BuiltinWList;
 use wordle_analyzer::{self, game};
 
 #[derive(Parser, Clone, Debug)]
@@ -24,7 +26,7 @@ fn main() -> anyhow::Result<()> {
     Logger::build_mini(Some(Level::TRACE))?;
     debug!("dumping CLI: {:#?}", cli);
 
-    let game = game::Game::builder()
+    let game: Game<BuiltinWList> = game::Game::builder()
         .length(cli.length)
         .precompute(cli.precompute)
         .build()?;
