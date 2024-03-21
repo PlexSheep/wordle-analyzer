@@ -83,13 +83,14 @@ pub struct GameBuilder<WL: WordList> {
     length: usize,
     precompute: bool,
     max_steps: usize,
-    wordlist: WL
+    wordlist: WL,
 }
 
 impl<WL: WordList> GameBuilder<WL> {
     /// build a [`Game`] with the stored configuration
     pub fn build(self) -> anyhow::Result<Game<WL>> {
-        let game: Game<WL> = Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
+        let game: Game<WL> =
+            Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
         Ok(game)
     }
 
@@ -125,7 +126,7 @@ impl<WL: WordList> Default for GameBuilder<WL> {
             length: super::DEFAULT_WORD_LENGTH,
             precompute: false,
             max_steps: super::DEFAULT_MAX_STEPS,
-            wordlist: WL::default()
+            wordlist: WL::default(),
         }
     }
 }
