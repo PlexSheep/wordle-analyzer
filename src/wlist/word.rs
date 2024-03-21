@@ -1,21 +1,20 @@
 use std::collections::HashMap;
 use std::fmt::{write, Display};
 use std::iter::Sum;
+use std::ops::RangeFull;
 
+use libpt::log::debug;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-// NOTE: We might need a different implementation for more precision
-// NOTE: This struct requires a custom Serialize and Deserialize implementation
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
-pub struct Frequency {
-    inner: f64,
-}
+pub type Frequency = f64;
 
 // PERF: Hash for String is probably a bottleneck
 pub type Word = String;
+pub type ManySolutions<'a> = Vec<(&'a Word, &'a Frequency)>;
+pub type Solution = (Word, Frequency);
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WordMap {
     #[serde(flatten)]
@@ -23,6 +22,9 @@ pub struct WordMap {
 }
 
 impl WordMap {
+    pub fn new(inner: HashMap<Word, Frequency>) -> Self {
+        Self { inner }
+    }
     pub fn keys(&self) -> std::collections::hash_map::Keys<'_, String, Frequency> {
         self.inner.keys()
     }
@@ -32,67 +34,52 @@ impl WordMap {
     pub fn iter(&self) -> std::collections::hash_map::Iter<'_, String, Frequency> {
         self.inner.iter()
     }
-}
-
-// We need custom Serialize and Deserialize of Frequency, because they are only primitive types.
-// Serde does not support serializing directly to and from primitives (such as floats)
-#[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for Frequency {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        struct FrequencyVisitor;
-        impl<'v> serde::de::Visitor<'v> for FrequencyVisitor {
-            type Value = Frequency;
-
-            fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
-                write!(formatter, "a floating-point number")
-            }
-
-            fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                Ok(Frequency { inner: v })
-            }
-        }
-
-        deserializer.deserialize_any(FrequencyVisitor)
+    pub fn freq_range(&self) -> std::ops::Range<Frequency> {
+        return 0.1e-10..1e-6;
+        let lowest: Frequency = todo!();
+        let highest: Frequency = todo!();
+        lowest..highest
     }
-}
-#[cfg(feature = "serde")]
-impl Serialize for Frequency {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_f64(self.inner)
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    pub fn n_common(&self) -> usize {
+        // TODO: calculate the amount of relatively common words
+        3000
+    }
+    pub fn threshold(&self) -> Frequency {
+        // HACK: I completely butchered the math here
+        // see https://github.com/3b1b/videos/blob/master/_2022/wordle/simulations.py
+        let l_under_sigmoid = 10_f64;
+        let len = self.len();
+        let mut c: f64 = l_under_sigmoid * (0.5 + self.n_common() as f64 / len as f64);
+        c *= 1e-7;
+        debug!(threshold=c);
+        c
+    }
+    pub fn inner(&self) -> &HashMap<Word, Frequency> {
+        &self.inner
     }
 }
 
-impl From<Frequency> for f64 {
-    fn from(value: Frequency) -> Self {
-        value.inner
-    }
-}
-
-impl From<f64> for Frequency {
-    fn from(value: f64) -> Self {
-        Frequency { inner: value }
-    }
-}
-
-impl Sum for Frequency {
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Self { inner: 0.0 }, |a, b| Self {
-            inner: a.inner + b.inner,
-        })
-    }
-}
-
-impl Display for Frequency {
+impl std::fmt::Debug for WordMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write(f, format_args!("{}", self.inner))
+        write(
+            f,
+            format_args!(
+                "WordMap {{\n\
+                    \t\tlen: {}\n\
+                    \t\tfreq_range: {:?}\n\
+                    \t\tcommon: {:?}\n\
+                \t}}",
+                self.len(),
+                self.freq_range(),
+                self.n_common()
+            ),
+        )
     }
 }

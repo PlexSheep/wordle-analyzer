@@ -12,12 +12,6 @@ pub struct BuiltinWList {
 }
 
 impl super::WordList for BuiltinWList {
-    fn solutions(&self) -> Vec<&Word> {
-        // PERF: this can be made faster if we were to use parallel iterators or chunking
-        // TODO: Filter should be a bit more elegant
-        let threshold = self.total_freq() / 2;
-        self.wordmap().iter().filter(|i| i.1 > )
-    }
     fn length_range(&self) -> impl std::ops::RangeBounds<usize> {
         5..5
     }
@@ -39,9 +33,20 @@ impl Debug for BuiltinWList {
         write(
             f,
             format_args!(
-                "BuiltinWList {{ amount: {}, total_freq: {} }}",
+                "BuiltinWList {{ \n\
+                \tamount: {}, \n\
+                \ttotal_freq: {}, \n\
+                \tcommon: {}, \n\
+                \tthreshold: {}, \n\
+                \tfreq_range: {:?}, \n\
+                \tover_threshold: {:#?}, \n\
+                }}",
                 self.amount(),
-                self.total_freq()
+                self.total_freq(),
+                self.wordmap().n_common(),
+                self.wordmap().threshold(),
+                self.wordmap().freq_range(),
+                self.over_threashold()
             ),
         )
     }

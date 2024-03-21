@@ -1,7 +1,7 @@
-use crate::wlist::word::Word;
+use crate::wlist::word::{Frequency, Solution, Word};
 use crate::wlist::WordList;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Game<WL>
 where
     WL: WordList,
@@ -10,7 +10,7 @@ where
     precompute: bool,
     max_steps: usize,
     step: usize,
-    solution: Word,
+    solution: Solution,
     wordlist: WL,
 }
 
@@ -32,16 +32,16 @@ impl<WL: WordList> Game<WL> {
     ///
     /// This function will return an error if .
     pub(crate) fn build(length: usize, precompute: bool, max_steps: usize, wlist: WL) -> anyhow::Result<Self> {
+        let solution = wlist.rand_solution();
         let mut game = Game {
             length,
             precompute,
             max_steps,
             step: 0,
-            solution: Word::default(), // we actually set this later
+            solution,
             wordlist: wlist
         };
 
-        game.solution = game.wordlist.rand_solution().into();
         Ok(game)
     }
 }

@@ -10,16 +10,15 @@ use word::*;
 pub type AnyWordlist = Box<dyn WordList>;
 
 pub trait WordList: Clone + std::fmt::Debug + Default {
-    // NOTE: The possible answers should be determined with a wordlist that has the
-    // frequencies/probabilities of the words. We then use a sigmoid function to determine if a
-    // word can be a solution based on that value. Only words above some threshold of
-    // commonness will be available as solutions then. Next, we choose one of the allowed words
-    // randomly.
-    // NOTE: must never return nothing
-    fn solutions(&self) -> Vec<&Word>;
-    fn rand_solution(&self) -> &Word {
+    fn solutions(&self) -> ManySolutions {
+        let wmap = self.wordmap();
+        let threshold = wmap.threshold();
+        wmap.iter().filter(|i| *i.1 > threshold).collect()
+    }
+    fn rand_solution(&self) -> Solution {
         let mut rng = rand::thread_rng();
-        self.solutions().iter().choose(&mut rng).unwrap()
+        let sol = *self.solutions().iter().choose(&mut rng).unwrap();
+        (sol.0.to_owned(), sol.1.to_owned())
     }
     fn length_range(&self) -> impl RangeBounds<usize>;
     fn amount(&self) -> usize {
@@ -28,5 +27,15 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
     fn wordmap(&self) -> &WordMap;
     fn total_freq(&self) -> Frequency {
         self.wordmap().values().map(|a| a.to_owned()).sum()
+    }
+    fn over_threashold(&self) -> WordMap {
+        let wmap = self.wordmap();
+        let threshold = wmap.threshold();
+        let wpairs: Vec<(_, _)> = wmap.iter().filter(|i| *i.1 > threshold).collect();
+        let mut hm = HashMap::new();
+        for (k, v) in wpairs {
+            hm.insert(k.into(), *v);
+        }
+        WordMap::new(hm)
     }
 }
