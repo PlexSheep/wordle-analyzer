@@ -30,14 +30,19 @@ impl<WL: WordList> Game<WL> {
     /// # Errors
     ///
     /// This function will return an error if .
-    pub(crate) fn build(length: usize, precompute: bool, max_steps: usize, wlist: WL) -> anyhow::Result<Self> {
+    pub(crate) fn build(
+        length: usize,
+        precompute: bool,
+        max_steps: usize,
+        wlist: WL,
+    ) -> anyhow::Result<Self> {
         let _game = Game {
             length,
             precompute,
             max_steps,
             step: 0,
             solution: String::default(), // we actually set this later
-            wordlist: wlist
+            wordlist: wlist,
         };
 
         todo!();
@@ -81,13 +86,14 @@ pub struct GameBuilder<WL: WordList> {
     length: usize,
     precompute: bool,
     max_steps: usize,
-    wordlist: WL
+    wordlist: WL,
 }
 
 impl<WL: WordList> GameBuilder<WL> {
     /// build a [`Game`] with the stored configuration
     pub fn build(self) -> anyhow::Result<Game<WL>> {
-        let game: Game<WL> = Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
+        let game: Game<WL> =
+            Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
         Ok(game)
     }
 
@@ -123,7 +129,7 @@ impl<WL: WordList> Default for GameBuilder<WL> {
             length: super::DEFAULT_WORD_LENGTH,
             precompute: false,
             max_steps: super::DEFAULT_MAX_STEPS,
-            wordlist: WL::default()
+            wordlist: WL::default(),
         }
     }
 }

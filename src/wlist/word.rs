@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Frequency {
-    inner: f64
+    inner: f64,
 }
 // PERF: Hash for String is probably a bottleneck
 pub type Word = String;
@@ -15,7 +15,7 @@ pub type Word = String;
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WordMap {
-    inner: HashMap<Word,Frequency>
+    inner: HashMap<Word, Frequency>,
 }
 
 impl WordMap {

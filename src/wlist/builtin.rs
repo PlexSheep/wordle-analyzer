@@ -6,7 +6,7 @@ const RAW_WORDLIST_FILE: &str = include_str!("../../data/wordlists/en_US_3b1b_fr
 
 #[derive(Clone, Debug)]
 pub struct BuiltinWList {
-    words: super::WordMap
+    words: super::WordMap,
 }
 
 impl super::WordList for BuiltinWList {
@@ -23,8 +23,6 @@ impl Default for BuiltinWList {
     fn default() -> Self {
         let words: super::WordMap = serde_json::from_str(RAW_WORDLIST_FILE).unwrap();
 
-        Self {
-            words
-        }
+        Self { words }
     }
 }

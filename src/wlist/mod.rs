@@ -1,5 +1,5 @@
 use rand::{prelude::*, seq::IteratorRandom};
-use std::collections::HashMap;
+
 use std::ops::RangeBounds;
 
 #[cfg(feature = "builtin_wlist")]
