@@ -31,6 +31,8 @@ fn main() -> anyhow::Result<()> {
         .precompute(cli.precompute)
         .build()?;
 
+    debug!("game: {:#?}", game);
+
     Ok(())
 }
 

@@ -22,4 +22,11 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
         self.solutions().iter().choose(&mut rng).unwrap()
     }
     fn length_range(&self) -> impl RangeBounds<usize>;
+    fn amount(&self) -> usize {
+        self.solutions().len()
+    }
+    fn wordmap(&self) -> &WordMap;
+    fn total_freq(&self) -> Frequency {
+        self.wordmap().values().map(|a| a.to_owned()).sum()
+    }
 }
