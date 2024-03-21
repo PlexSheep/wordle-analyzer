@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Game {
     length: usize,
     precompute: bool,
@@ -42,14 +43,7 @@ impl Game {
     }
 }
 
-impl Default for Game {
-    fn default() -> Self {
-        GameBuilder::default()
-            .build()
-            .expect("could not build game with defaults")
-    }
-}
-
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GameBuilder {
     length: usize,
     precompute: bool,

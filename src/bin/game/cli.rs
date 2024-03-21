@@ -1,6 +1,9 @@
+#![warn(clippy::all)]
+#![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
 use clap::Parser;
 use libpt::log::*;
-use wordle_analyzer::{game,self};
+use wordle_analyzer::{self, game};
 
 #[derive(Parser, Clone, Debug)]
 #[command(version, about, long_about, author)]
@@ -13,7 +16,7 @@ struct Cli {
     length: usize,
     /// how many times can we guess?
     #[arg(short, long, default_value_t = wordle_analyzer::DEFAULT_MAX_STEPS)]
-    max_steps: usize
+    max_steps: usize,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -23,7 +26,8 @@ fn main() -> anyhow::Result<()> {
 
     let game = game::Game::builder()
         .length(cli.length)
-        .precompute(cli.precompute).build()?;
+        .precompute(cli.precompute)
+        .build()?;
 
     Ok(())
 }
@@ -31,8 +35,10 @@ fn main() -> anyhow::Result<()> {
 fn get_word(cli: &Cli) -> String {
     let mut word = String::new();
 
-    todo!("get user input");
-    todo!("validate user input");
+    // TODO: get user input
+    // TODO: validate user input
+
+    todo!();
 
     assert_eq!(word.len(), cli.length);
     word
