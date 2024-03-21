@@ -1,6 +1,10 @@
 use crate::wlist::word::{Frequency, Solution, Word};
 use crate::wlist::WordList;
 
+use self::response::GuessResponse;
+
+pub mod response;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Game<WL>
 where
@@ -43,6 +47,16 @@ impl<WL: WordList> Game<WL> {
         };
 
         Ok(game)
+    }
+
+    pub fn reset(mut self) -> Self {
+        self.solution = self.wordlist.rand_solution();
+        self.step = 0;
+        self
+    }
+
+    pub fn guess(&mut self, word: Word) -> anyhow::Result<GuessResponse> {
+        todo!()
     }
 }
 
