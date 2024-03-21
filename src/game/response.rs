@@ -2,7 +2,7 @@ use crate::wlist::word::Word;
 
 pub struct GuessResponse {
     guess: Word,
-    status: Vec<(char,Status)>
+    status: Vec<(char,Status)>,
     step: usize
 }
 

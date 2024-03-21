@@ -35,7 +35,12 @@ impl<WL: WordList> Game<WL> {
     /// # Errors
     ///
     /// This function will return an error if .
-    pub(crate) fn build(length: usize, precompute: bool, max_steps: usize, wlist: WL) -> anyhow::Result<Self> {
+    pub(crate) fn build(
+        length: usize,
+        precompute: bool,
+        max_steps: usize,
+        wlist: WL,
+    ) -> anyhow::Result<Self> {
         let solution = wlist.rand_solution();
         let mut game = Game {
             length,
@@ -43,7 +48,7 @@ impl<WL: WordList> Game<WL> {
             max_steps,
             step: 0,
             solution,
-            wordlist: wlist
+            wordlist: wlist,
         };
 
         Ok(game)
