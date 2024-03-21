@@ -4,7 +4,7 @@ pub struct Game {
     precompute: bool,
     max_steps: usize,
     step: usize,
-    solution: String
+    solution: String,
 }
 
 impl Game {
@@ -24,13 +24,14 @@ impl Game {
     /// # Errors
     ///
     /// This function will return an error if .
-    pub(crate) fn build(length: usize, precompute: bool, max_steps: usize) -> anyhow::Result<(Self)> {
-        let mut game = Game {
-            length, precompute, max_steps,
+    pub(crate) fn build(length: usize, precompute: bool, max_steps: usize) -> anyhow::Result<Self> {
+        let _game = Game {
+            length,
+            precompute,
+            max_steps,
             step: 0,
-            solution: String::default() // we actually set this later
+            solution: String::default(), // we actually set this later
         };
-
 
         // TODO: load wordlist of possible answers
         // TODO: select one as a solution at random
@@ -47,14 +48,14 @@ impl Game {
 pub struct GameBuilder {
     length: usize,
     precompute: bool,
-    max_steps: usize
+    max_steps: usize,
 }
 
 impl GameBuilder {
     /// build a [`Game`] with the stored configuration
     pub fn build(self) -> anyhow::Result<Game> {
-            let game: Game = Game::build(self.length, self.precompute, self.max_steps)?;
-            Ok(game)
+        let game: Game = Game::build(self.length, self.precompute, self.max_steps)?;
+        Ok(game)
     }
 
     /// Sets the precompute of this [`GameBuilder`].
@@ -75,7 +76,7 @@ impl Default for GameBuilder {
         Self {
             length: super::DEFAULT_WORD_LENGTH,
             precompute: false,
-            max_steps: super::DEFAULT_MAX_STEPS
+            max_steps: super::DEFAULT_MAX_STEPS,
         }
     }
 }
