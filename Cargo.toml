@@ -10,16 +10,25 @@ readme = "README.md"
 homepage = "https://git.cscherr.de/PlexSheep/wordle-analyzer"
 repository = "https://git.cscherr.de/PlexSheep/wordle-analyzer"
 keywords = ["wordle", "benchmark"]
-default-run = "wordle"
+default-run = "wordlec"
 
 [features]
-default = ["game", "bench"]
+default = ["game", "bench", "tui"]
 game = []
+tui = ["game"]
 bench = []
 
 [dependencies]
+anyhow = "1.0.81"
+clap = { version = "4.5.3", features = ["derive"] }
+libpt = "0.4.2"
 
 [[bin]]
-name = "cliwordle"
-path = "src/bin/cliwordle.rs"
+name = "wordlec"
+path = "src/bin/game/cli.rs"
 required-features = ["game"]
+
+[[bin]]
+name = "wordlet"
+path = "src/bin/game/tui.rs"
+required-features = ["tui", "game"]
