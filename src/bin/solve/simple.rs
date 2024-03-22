@@ -7,7 +7,7 @@ use libpt::log::*;
 
 use wordle_analyzer::game::response::GuessResponse;
 
-use wordle_analyzer::solve::{stupid, BuiltinSolverNames, NaiveSolver, Solver, StupidSolver};
+use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 use wordle_analyzer::wlist::word::Word;
 use wordle_analyzer::{self, game};
