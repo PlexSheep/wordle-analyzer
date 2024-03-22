@@ -12,6 +12,6 @@ pub mod bench;
 pub mod error;
 #[cfg(feature = "game")]
 pub mod game;
-#[cfg(feature = "solvers")]
-pub mod solvers;
+#[cfg(feature = "solve")]
+pub mod solve;
 pub mod wlist;

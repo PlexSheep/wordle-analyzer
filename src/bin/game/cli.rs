@@ -39,11 +39,10 @@ fn main() -> anyhow::Result<()> {
     debug!("dumping CLI: {:#?}", cli);
 
     let wl = BuiltinWList::default();
-    let builder = game::Game::builder()
+    let builder = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)
-        .precompute(cli.precompute)
-        .wordlist(wl);
+        .precompute(cli.precompute);
     let mut game = builder.build()?;
 
     debug!("{game:#?}");

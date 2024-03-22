@@ -1,18 +1,20 @@
-use crate::wlist::word::Word;
+use crate::wlist::word::{Word, WordData};
+use crate::wlist::WordList;
 use anyhow::Ok;
 use colored::{ColoredString, Colorize};
 use libpt::log::debug;
 use std::fmt::Display;
 
+use super::Game;
+
 pub type Evaluation = Vec<(char, Status)>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GuessResponse {
     guess: Word,
     evaluation: Evaluation,
-    step: usize,
     finish: bool,
-    win: bool,
+    solution: WordData,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -23,29 +25,21 @@ pub enum Status {
 }
 
 impl GuessResponse {
-    pub(crate) fn new(
-        guess: Word,
-        status: Vec<(char, Status)>,
-        step: usize,
-        max_step: usize,
-    ) -> Self {
-        let mut win = false;
-        let mut finish: bool = if step > max_step {
+    pub(crate) fn new<WL: WordList>(guess: Word, status: Vec<(char, Status)>, game: &Game<WL>) -> Self {
+        let finish: bool = if game.step() > game.max_steps() {
             true
         } else {
             let mut matched = true;
             for p in &status {
                 matched &= p.1 == Status::Matched;
             }
-            win = matched;
-            win
+            matched
         };
         Self {
             guess,
             evaluation: status,
-            step,
             finish,
-            win,
+            solution: game.solution().clone(),
         }
     }
 
@@ -54,7 +48,15 @@ impl GuessResponse {
     }
 
     pub fn won(&self) -> bool {
-        self.win
+        self.guess == self.solution.0
+    }
+
+    pub fn solution(&self) -> Option<WordData> {
+        if self.won() {
+            Some(self.solution.clone())
+        } else {
+            None
+        }
     }
 }
 

@@ -15,6 +15,9 @@ pub enum Error {
         #[from]
         source: anyhow::Error,
     },
+    // for `FromStr` of `BuiltinSolver`
+    #[error("Unknown builtin solver")]
+    UnknownBuiltinSolver
 }
 
 #[derive(Debug, Clone, Error)]

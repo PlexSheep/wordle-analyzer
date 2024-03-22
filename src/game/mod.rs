@@ -7,6 +7,8 @@ use libpt::log::debug;
 pub mod response;
 use response::GuessResponse;
 
+pub mod summary;
+
 use self::response::Status;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -26,8 +28,8 @@ where
 
 impl<'wl, WL: WordList> Game<'wl, WL> {
     /// get a new [`GameBuilder`]
-    pub fn builder() -> GameBuilder<WL> {
-        GameBuilder::default()
+    pub fn builder(wl: &'wl WL) -> GameBuilder<'wl, WL> {
+        GameBuilder::new(wl)
     }
     /// Create a [Game] of wordle
     ///
@@ -97,7 +99,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             evaluation.push((c, status));
         }
 
-        let mut response = GuessResponse::new(guess, evaluation, self.step, self.max_steps);
+        let mut response = GuessResponse::new(guess, evaluation, &self);
         self.finished = response.finished();
         Ok(response)
     }
@@ -113,6 +115,14 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     pub fn step(&self) -> usize {
         self.step
     }
+
+    pub fn finished(&self) -> bool {
+        self.finished
+    }
+
+    pub fn max_steps(&self) -> usize {
+        self.max_steps
+    }
 }
 
 /// Build and Configure a [`Game`]
@@ -126,9 +136,11 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 ///
 /// ```
 /// # use wordle_analyzer::game::*;
+/// # use wordle_analyzer::wlist::builtin::BuiltinWList;
 /// # use anyhow::Result;
 /// # fn main() -> Result<()> {
-/// let game: Game = GameBuilder::default()
+/// let wl = BuiltinWList::default();
+/// let game: Game<_> = GameBuilder::new(&wl)
 ///     .build()?;
 /// # Ok(())
 /// # }
@@ -136,9 +148,11 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 ///
 /// ```
 /// # use wordle_analyzer::game::*;
+/// # use wordle_analyzer::wlist::builtin::BuiltinWList;
 /// # use anyhow::Result;
 /// # fn main() -> Result<()> {
-/// let game: Game = Game::builder()
+/// let wl = BuiltinWList::default();
+/// let game: Game<_> = Game::builder(&wl)
 ///     .length(5)
 ///     .precompute(false)
 ///     .max_steps(6)
@@ -148,19 +162,31 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 /// ```
 ///
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct GameBuilder<WL: WordList> {
+pub struct GameBuilder<'wl, WL: WordList> {
     length: usize,
     precompute: bool,
     max_steps: usize,
-    wordlist: WL,
+    wordlist: &'wl WL,
 }
 
-impl<WL: WordList> GameBuilder<WL> {
+impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
+    /// make a new [GameBuilder]
+    ///
+    /// We need a [WordList], so provide one here.
+    pub fn new(wl: &'wl WL) -> Self {
+        Self {
+            length: super::DEFAULT_WORD_LENGTH,
+            precompute: false,
+            max_steps: super::DEFAULT_MAX_STEPS,
+            wordlist: wl
+        }
+    }
+
     /// build a [`Game`] with the stored configuration
-    pub fn build(&self) -> GameResult<Game<WL>> {
+    pub fn build(&self) -> GameResult<Game<'wl, WL>> {
         debug!("{:#?}", self);
         let game: Game<WL> =
-            Game::build(self.length, self.precompute, self.max_steps, &self.wordlist)?;
+            Game::build(self.length, self.precompute, self.max_steps, self.wordlist)?;
         Ok(game)
     }
 
@@ -194,19 +220,8 @@ impl<WL: WordList> GameBuilder<WL> {
     ///
     /// The builder can be used multiple times. Each [`Game`] will have a immutable reference to
     /// `wl`.
-    pub fn wordlist(mut self, wl: WL) -> Self {
+    pub fn wordlist(mut self, wl: &'wl WL) -> Self {
         self.wordlist = wl;
         self
-    }
-}
-
-impl<WL: WordList> Default for GameBuilder<WL> {
-    fn default() -> Self {
-        Self {
-            length: super::DEFAULT_WORD_LENGTH,
-            precompute: false,
-            max_steps: super::DEFAULT_MAX_STEPS,
-            wordlist: WL::default(),
-        }
     }
 }

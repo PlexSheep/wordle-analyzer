@@ -1,0 +1,56 @@
+use std::{fmt::Display, str::FromStr};
+
+use crate::{
+    error::{Error, WResult},
+    game::{response::*, summary::Summary, Game},
+    wlist::{word::WordData, WordList},
+};
+
+pub mod naive;
+pub mod stupid;
+
+pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug {
+    fn build(wordlist: &'wl WL) -> WResult<Self>;
+    fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse>;
+    fn solve(&self, game: &mut Game<'wl, WL>) -> WResult<Option<WordData>> {
+        let mut resp: GuessResponse;
+        loop {
+            resp = self.play(game)?;
+            if game.finished() {
+                break;
+            }
+        }
+        Ok(resp.solution())
+    }
+    fn play_n(&self, games: &'wl mut Vec<Game<'wl, WL>>) -> WResult<Summary<'wl, WL>> {
+        for game in games.iter_mut() {
+            self.play(game)?;
+        }
+        Ok(Summary::from(games))
+    }
+}
+
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum BuiltinSolvers {
+    #[default]
+    Naive,
+    Stupid,
+}
+
+impl FromStr for BuiltinSolvers {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "naive" => Ok(Self::Naive),
+            "stupid" => Ok(Self::Stupid),
+            _ => Err(Self::Err::UnknownBuiltinSolver),
+        }
+    }
+}
+
+impl Display for BuiltinSolvers {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
