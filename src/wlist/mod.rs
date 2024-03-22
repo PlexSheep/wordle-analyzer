@@ -23,6 +23,11 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
         let sol = *self.solutions().iter().choose(&mut rng).unwrap();
         (sol.0.to_owned(), sol.1.to_owned())
     }
+    fn rand_word(&self) -> WordData {
+        let mut rng = rand::thread_rng();
+        let w = self.wordmap().iter().choose(&mut rng).unwrap();
+        (w.0.clone(), *w.1)
+    }
     fn length_range(&self) -> impl RangeBounds<usize>;
     fn amount(&self) -> usize {
         self.solutions().len()
