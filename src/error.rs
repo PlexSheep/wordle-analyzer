@@ -17,7 +17,7 @@ pub enum Error {
     },
     // for `FromStr` of `BuiltinSolver`
     #[error("Unknown builtin solver")]
-    UnknownBuiltinSolver
+    UnknownBuiltinSolver,
 }
 
 #[derive(Debug, Clone, Error)]

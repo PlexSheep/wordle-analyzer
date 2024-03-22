@@ -178,7 +178,7 @@ impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
             length: super::DEFAULT_WORD_LENGTH,
             precompute: false,
             max_steps: super::DEFAULT_MAX_STEPS,
-            wordlist: wl
+            wordlist: wl,
         }
     }
 

@@ -25,7 +25,11 @@ pub enum Status {
 }
 
 impl GuessResponse {
-    pub(crate) fn new<WL: WordList>(guess: Word, status: Vec<(char, Status)>, game: &Game<WL>) -> Self {
+    pub(crate) fn new<WL: WordList>(
+        guess: Word,
+        status: Vec<(char, Status)>,
+        game: &Game<WL>,
+    ) -> Self {
         let finish: bool = if game.step() > game.max_steps() {
             true
         } else {
