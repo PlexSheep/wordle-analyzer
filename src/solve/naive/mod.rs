@@ -37,6 +37,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             .iter()
             .filter(|p| !game.made_guesses().contains(&&p.0))
             .filter(|p| {
+                // TODO: don't repeat unmatched contained chars on the same position twice #2
                 let mut fits = true;
                 for c in other_chars.iter() {
                     fits &= p.0.contains(*c);
