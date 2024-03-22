@@ -47,7 +47,7 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
         WordMap::from(hm)
     }
     fn get_word(&self, word: &Word) -> Option<WordData>;
-    fn letter_frequency(&self) -> WordMap {
+    fn letter_frequency(&self) -> HashMap<char, Frequency> {
         // PERF: this function has complexity O(n²)!
         let mut cmap: HashMap<char, usize> = HashMap::new();
         // count the chars in each word
@@ -58,8 +58,8 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
                 }
             }
         }
-        // make all chars to strings
-        let cmap: HashMap<Word, usize> = cmap.into_iter().map(|p| (p.0.to_string(), p.1)).collect();
-        WordMap::from_absolute(cmap)
+        // convert to relative frequency
+        let n: f64 = cmap.keys().len() as f64;
+        cmap.into_iter().map(|p| (p.0, p.1 as f64 / n)).collect()
     }
 }
