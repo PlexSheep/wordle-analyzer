@@ -82,7 +82,6 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
         let keys = pattern.captures_iter(&hay);
         let mut buf = ManyWordDatas::new();
         for k in keys {
-            debug!("match: {k:?}");
             let w: WordData = self.wordmap().get(&k[0]).unwrap();
             buf.push(w)
         }
