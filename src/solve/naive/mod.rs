@@ -1,6 +1,6 @@
 use libpt::log::info;
 
-use crate::wlist::word::Word;
+use crate::wlist::word::{ManyWordDatas, Word};
 use crate::wlist::WordList;
 
 use super::{AnyBuiltinSolver, Solver, Status};
@@ -26,11 +26,15 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                 }
             }
         }
-        game.wordlist()
+        let matches: ManyWordDatas = game
+            .wordlist()
             .get_words_matching(buf)
-            .expect("the solution does not exist in the wordlist")[0]
-            .0
-            .clone()
+            .expect("the solution does not exist in the wordlist")
+            .iter()
+            .filter(|m| !game.made_guesses().contains(&&m.0))
+            .map(|v| v.to_owned())
+            .collect();
+        matches[0].0.to_owned()
     }
 }
 

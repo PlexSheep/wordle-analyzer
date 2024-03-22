@@ -1,5 +1,5 @@
 use crate::error::*;
-use crate::wlist::word::{Word, WordData};
+use crate::wlist::word::{ManyWordDatas, ManyWordsRef, Word, WordData};
 use crate::wlist::WordList;
 
 use libpt::log::debug;
@@ -138,6 +138,10 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 
     pub fn wordlist(&self) -> &WL {
         self.wordlist
+    }
+
+    pub(crate) fn made_guesses(&self) -> ManyWordsRef {
+        self.responses.iter().map(|r| r.guess()).collect()
     }
 }
 

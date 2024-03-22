@@ -67,7 +67,7 @@ impl GuessResponse {
         &self.evaluation
     }
 
-    pub fn guess(&self) -> &str {
+    pub fn guess(&self) -> &Word {
         &self.guess
     }
 }
