@@ -13,10 +13,10 @@ keywords = ["wordle", "benchmark"]
 default-run = "wordlec"
 
 [features]
-default = ["game", "bench", "tui", "solvers", "builtin_wlist", "serde"]
+default = ["game", "bench", "tui", "solve", "builtin_wlist", "serde"]
 builtin_wlist = ["dep:serde_json", "serde"]
 game = ["builtin_wlist"]
-solvers = []
+solve = []
 tui = ["cli"]
 cli = ["dep:clap"]
 bench = []
@@ -41,3 +41,8 @@ required-features = ["game", "cli"]
 name = "wordlet"
 path = "src/bin/game/tui.rs"
 required-features = ["tui", "game"]
+
+[[bin]]
+name = "wordlesolve"
+path = "src/bin/solve/simple.rs"
+required-features = ["game", "solve", "cli"]

@@ -18,6 +18,9 @@ impl super::WordList for BuiltinWList {
     fn wordmap(&self) -> &super::WordMap {
         &self.words
     }
+    fn get_word(&self, word: &Word) -> Option<super::WordData> {
+        self.words.get(&word)
+    }
 }
 
 impl Default for BuiltinWList {

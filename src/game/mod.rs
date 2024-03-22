@@ -1,15 +1,16 @@
 use crate::error::*;
-use crate::wlist::word::{Solution, Word};
+use crate::wlist::word::{WordData, Word};
 use crate::wlist::WordList;
 
-pub mod response;
 use libpt::log::debug;
+
+pub mod response;
 use response::GuessResponse;
 
 use self::response::Status;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Game<WL>
+pub struct Game<'wl, WL>
 where
     WL: WordList,
 {
@@ -17,13 +18,13 @@ where
     precompute: bool,
     max_steps: usize,
     step: usize,
-    solution: Solution,
-    wordlist: WL,
+    solution: WordData,
+    wordlist: &'wl WL,
     finished: bool,
     // TODO: keep track of the letters the user has tried
 }
 
-impl<WL: WordList> Game<WL> {
+impl<'wl, WL: WordList> Game<'wl, WL> {
     /// get a new [`GameBuilder`]
     pub fn builder() -> GameBuilder<WL> {
         GameBuilder::default()
@@ -44,30 +45,33 @@ impl<WL: WordList> Game<WL> {
         length: usize,
         precompute: bool,
         max_steps: usize,
-        wlist: WL,
+        wlist: &'wl WL,
     ) -> GameResult<Self> {
         // TODO: check if the length is in the range bounds of the wordlist
         let solution = wlist.rand_solution();
-        let game = Game {
+        let game: Game<'wl, WL> = Game {
             length,
             precompute,
             max_steps,
             step: 1,
             solution,
-            wordlist: wlist,
+            wordlist: &wlist,
             finished: false,
         };
 
         Ok(game)
     }
 
-    pub fn reset(mut self) -> Self {
-        self.solution = self.wordlist.rand_solution();
-        self.step = 1;
-        self.finished = false;
-        self
-    }
-
+    /// Make a new guess
+    ///
+    /// The word will be evaluated against the [solution](Game::solution) of the [Game].
+    /// A [GuessResponse] will be formulated, showing us which letters are correctly placed, in the
+    /// solution, or just wrong.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the length of the [Word] is wrong It will also error
+    /// if the game is finished.
     pub fn guess(&mut self, guess: Word) -> GameResult<GuessResponse> {
         if guess.len() != self.length {
             return Err(GameError::GuessHasWrongLength);
@@ -102,7 +106,7 @@ impl<WL: WordList> Game<WL> {
         self.length
     }
 
-    pub fn solution(&self) -> &Solution {
+    pub fn solution(&self) -> &WordData {
         &self.solution
     }
 
@@ -153,10 +157,10 @@ pub struct GameBuilder<WL: WordList> {
 
 impl<WL: WordList> GameBuilder<WL> {
     /// build a [`Game`] with the stored configuration
-    pub fn build(self) -> GameResult<Game<WL>> {
+    pub fn build(&self) -> GameResult<Game<WL>> {
         debug!("{:#?}", self);
         let game: Game<WL> =
-            Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
+            Game::build(self.length, self.precompute, self.max_steps, &self.wordlist)?;
         Ok(game)
     }
 
@@ -183,6 +187,15 @@ impl<WL: WordList> GameBuilder<WL> {
     pub fn max_steps(mut self, max_steps: usize) -> Self {
         self.max_steps = max_steps;
         debug!("max steps: {:#?}", self.max_steps);
+        self
+    }
+
+    /// Set the wordlist for the builder
+    ///
+    /// The builder can be used multiple times. Each [`Game`] will have a immutable reference to
+    /// `wl`.
+    pub fn wordlist(mut self, wl: WL) -> Self {
+        self.wordlist = wl;
         self
     }
 }

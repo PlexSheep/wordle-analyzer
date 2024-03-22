@@ -4,10 +4,12 @@ use colored::{ColoredString, Colorize};
 use libpt::log::debug;
 use std::fmt::Display;
 
+pub type Evaluation = Vec<(char, Status)>;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuessResponse {
     guess: Word,
-    evaluation: Vec<(char, Status)>,
+    evaluation: Evaluation,
     step: usize,
     finish: bool,
     win: bool,

@@ -8,15 +8,17 @@ pub mod builtin;
 pub mod word;
 use word::*;
 
+use crate::error::WResult;
+
 pub type AnyWordlist = Box<dyn WordList>;
 
 pub trait WordList: Clone + std::fmt::Debug + Default {
-    fn solutions(&self) -> ManySolutions {
+    fn solutions(&self) -> ManyWordDatas {
         let wmap = self.wordmap();
         let threshold = wmap.threshold();
         wmap.iter().filter(|i| *i.1 > threshold).collect()
     }
-    fn rand_solution(&self) -> Solution {
+    fn rand_solution(&self) -> WordData {
         let mut rng = rand::thread_rng();
         let sol = *self.solutions().iter().choose(&mut rng).unwrap();
         (sol.0.to_owned(), sol.1.to_owned())
@@ -39,4 +41,5 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
         }
         WordMap::new(hm)
     }
+    fn get_word(&self, word: &Word) -> Option<WordData>;
 }

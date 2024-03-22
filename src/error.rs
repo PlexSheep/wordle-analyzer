@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type WResult<T> = std::result::Result<T, Error>;
 pub type GameResult<T> = std::result::Result<T, GameError>;
 
 #[derive(Debug, Error)]
