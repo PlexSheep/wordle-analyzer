@@ -1,14 +1,12 @@
 #![warn(clippy::all)]
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
-use std::io::Write;
 
 use clap::Parser;
 use libpt::log::*;
-use wordle_analyzer::error::GameError;
+
 use wordle_analyzer::game::response::GuessResponse;
 
-use wordle_analyzer::game::Game;
 use wordle_analyzer::solve::{stupid, BuiltinSolvers, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 use wordle_analyzer::wlist::word::Word;
@@ -49,17 +47,15 @@ fn main() -> anyhow::Result<()> {
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
     let solver = match cli.solver {
-        BuiltinSolvers::Naive => {
-            stupid::StupidSolver::build(&wl)?
-        },
-        _ => todo!()
+        BuiltinSolvers::Naive => stupid::StupidSolver::build(&wl)?,
+        _ => todo!(),
     };
     let mut game = builder.build()?;
 
     debug!("{game:#?}");
 
     let mut response: GuessResponse;
-    let mut guess: Word;
+    let mut _guess: Word;
     loop {
         response = solver.play(&mut game)?;
         println!("{response}");
