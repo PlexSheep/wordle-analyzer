@@ -71,11 +71,7 @@ fn main() -> anyhow::Result<()> {
         }
     }
     if response.won() {
-        println!(
-            "You win! You took {} guesses. {:?}",
-            game.step() - 1,
-            game.solution()
-        );
+        println!("You win! You took {} guesses.", game.step() - 1);
     } else {
         println!("You lose! The solution was {:?}.", game.solution());
     }
@@ -87,9 +83,6 @@ fn get_word(_cli: &Cli, step: usize) -> std::io::Result<Word> {
     let mut word = Word::new();
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
-
-    // TODO: get user input
-    // TODO: validate user input
 
     print!("guess {step} > ");
     stdout.flush()?;
