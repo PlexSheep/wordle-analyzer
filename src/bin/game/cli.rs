@@ -3,7 +3,6 @@
 #![warn(missing_debug_implementations)]
 use std::io::Write;
 
-use anyhow::anyhow;
 use clap::Parser;
 use libpt::log::*;
 use wordle_analyzer::error::GameError;
