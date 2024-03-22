@@ -3,6 +3,7 @@ use crate::wlist::word::{Solution, Word};
 use crate::wlist::WordList;
 
 pub mod response;
+use libpt::log::debug;
 use response::GuessResponse;
 
 use self::response::Status;
@@ -19,6 +20,7 @@ where
     solution: Solution,
     wordlist: WL,
     finished: bool,
+    // TODO: keep track of the letters the user has tried
 }
 
 impl<WL: WordList> Game<WL> {
@@ -44,6 +46,7 @@ impl<WL: WordList> Game<WL> {
         max_steps: usize,
         wlist: WL,
     ) -> GameResult<Self> {
+        // TODO: check if the length is in the range bounds of the wordlist
         let solution = wlist.rand_solution();
         let game = Game {
             length,
@@ -91,6 +94,7 @@ impl<WL: WordList> Game<WL> {
         }
 
         let mut response = GuessResponse::new(guess, evaluation, self.step, self.max_steps);
+        self.finished = response.finished();
         Ok(response)
     }
 
@@ -150,6 +154,7 @@ pub struct GameBuilder<WL: WordList> {
 impl<WL: WordList> GameBuilder<WL> {
     /// build a [`Game`] with the stored configuration
     pub fn build(self) -> GameResult<Game<WL>> {
+        debug!("{:#?}", self);
         let game: Game<WL> =
             Game::build(self.length, self.precompute, self.max_steps, WL::default())?;
         Ok(game)
@@ -177,6 +182,7 @@ impl<WL: WordList> GameBuilder<WL> {
     /// Default is [`super::DEFAULT_MAX_STEPS`]
     pub fn max_steps(mut self, max_steps: usize) -> Self {
         self.max_steps = max_steps;
+        debug!("max steps: {:#?}", self.max_steps);
         self
     }
 }

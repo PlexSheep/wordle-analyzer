@@ -41,6 +41,7 @@ fn main() -> anyhow::Result<()> {
 
     let mut game = game::Game::<BuiltinWList>::builder()
         .length(cli.length)
+        .max_steps(cli.max_steps)
         .precompute(cli.precompute)
         .build()?;
 
@@ -49,22 +50,19 @@ fn main() -> anyhow::Result<()> {
     let mut response: GuessResponse;
     let mut guess: Word;
     loop {
-        guess = match get_word(&cli, game.step()) {
-            Ok(g) => g,
-            Err(err) => match err.downcast::<GameError>() {
-                Ok(game_err) => match game_err {
-                    GameError::GuessHasWrongLength => {
-                        println!("wring length: must be {} long", game.length());
-                        continue;
-                    }
-                    _ => {
-                        return Err(game_err.into());
-                    }
-                },
-                Err(err) => return Err(anyhow!(err.to_string())),
+        guess = get_word(&cli, game.step())?;
+        response = match game.guess(guess) {
+            Ok(r) => r,
+            Err(err) => match err {
+                GameError::GuessHasWrongLength => {
+                    println!("word length: must be {} long", game.length());
+                    continue;
+                }
+                _ => {
+                    return Err(err.into());
+                }
             },
         };
-        response = game.guess(guess)?;
 
         println!("{response}");
 
@@ -81,7 +79,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_word(_cli: &Cli, step: usize) -> anyhow::Result<Word> {
+fn get_word(_cli: &Cli, step: usize) -> std::io::Result<Word> {
     let mut word = Word::new();
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();

@@ -1,6 +1,7 @@
 use crate::wlist::word::Word;
 use anyhow::Ok;
 use colored::{ColoredString, Colorize};
+use libpt::log::debug;
 use std::fmt::Display;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,7 +28,7 @@ impl GuessResponse {
         max_step: usize,
     ) -> Self {
         let mut win = false;
-        let mut finish: bool = if step >= max_step {
+        let mut finish: bool = if step > max_step {
             true
         } else {
             let mut matched = true;
