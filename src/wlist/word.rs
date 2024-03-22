@@ -104,7 +104,7 @@ impl From<HashMap<Word, Frequency>> for WordMap {
     }
 }
 
-impl From<WordMap > for HashMap<Word, Frequency>{
+impl From<WordMap> for HashMap<Word, Frequency> {
     fn from(value: WordMap) -> Self {
         value.inner
     }
