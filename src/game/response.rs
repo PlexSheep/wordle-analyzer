@@ -33,11 +33,7 @@ impl GuessResponse {
         let finish: bool = if game.step() > game.max_steps() {
             true
         } else {
-            let mut matched = true;
-            for p in &status {
-                matched &= p.1 == Status::Matched;
-            }
-            matched
+            guess == game.solution().0
         };
         Self {
             guess,
