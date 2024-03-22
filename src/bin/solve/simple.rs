@@ -7,7 +7,7 @@ use libpt::log::*;
 
 use wordle_analyzer::game::response::GuessResponse;
 
-use wordle_analyzer::solve::{stupid, BuiltinSolvers, Solver};
+use wordle_analyzer::solve::{stupid, BuiltinSolverNames, NaiveSolver, Solver, StupidSolver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 use wordle_analyzer::wlist::word::Word;
 use wordle_analyzer::{self, game};
@@ -28,8 +28,8 @@ struct Cli {
     #[arg(short, long)]
     verbose: bool,
     /// which solver to use
-    #[arg(short, long, default_value_t = BuiltinSolvers::default())]
-    solver: BuiltinSolvers,
+    #[arg(short, long, default_value_t = BuiltinSolverNames::default())]
+    solver: BuiltinSolverNames,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -46,10 +46,7 @@ fn main() -> anyhow::Result<()> {
         .length(cli.length)
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
-    let solver = match cli.solver {
-        BuiltinSolvers::Naive => stupid::StupidSolver::build(&wl)?,
-        _ => todo!(),
-    };
+    let solver = cli.solver.to_solver(&wl);
     let mut game = builder.build()?;
 
     debug!("{game:#?}");

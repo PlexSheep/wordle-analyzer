@@ -10,9 +10,11 @@ use crate::{
 };
 
 pub mod naive;
+pub use naive::NaiveSolver;
 pub mod stupid;
+pub use stupid::StupidSolver;
 
-pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug {
+pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized {
     fn build(wordlist: &'wl WL) -> WResult<Self>;
     fn guess_for(&self, game: &Game<'wl, WL>) -> Word;
     fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
@@ -34,17 +36,33 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug {
         }
         Ok(Summary::from(games))
     }
+    fn boxed(self) -> Box<Self> {
+        Box::new(self)
+    }
 }
 
-#[non_exhaustive]
+#[derive(Debug, Clone)]
+pub enum AnyBuiltinSolver<'wl, WL: WordList> {
+    Naive(NaiveSolver<'wl, WL>),
+    Stupid(StupidSolver<'wl, WL>),
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum BuiltinSolvers {
+pub enum BuiltinSolverNames {
     #[default]
     Naive,
     Stupid,
 }
+impl BuiltinSolverNames {
+    pub fn to_solver<'wl, WL: WordList>(&self, wl: &'wl WL) -> AnyBuiltinSolver<'wl, WL> {
+        match self {
+            Self::Naive => NaiveSolver::build(wl).unwrap().into(),
+            Self::Stupid => StupidSolver::build(wl).unwrap().into(),
+        }
+    }
+}
 
-impl FromStr for BuiltinSolvers {
+impl FromStr for BuiltinSolverNames {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
@@ -55,8 +73,20 @@ impl FromStr for BuiltinSolvers {
     }
 }
 
-impl Display for BuiltinSolvers {
+impl Display for BuiltinSolverNames {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl<'wl, WL: WordList> Solver<'wl, WL> for AnyBuiltinSolver<'wl, WL> {
+    fn build(wordlist: &'wl WL) -> WResult<Self> {
+        Ok(Self::Naive(NaiveSolver::build(wordlist)?))
+    }
+    fn guess_for(&self, game: &Game<'wl, WL>) -> Word {
+        match self {
+            Self::Naive(solver) => solver.guess_for(game),
+            Self::Stupid(solver) => solver.guess_for(game),
+        }
     }
 }
