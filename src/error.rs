@@ -21,10 +21,10 @@ pub enum Error {
     #[error("Unknown builtin solver")]
     UnknownBuiltinSolver,
     #[error("pattern matching error")]
-    Regex{
+    Regex {
         #[from]
-        source: regex::Error
-    }
+        source: regex::Error,
+    },
 }
 
 #[derive(Debug, Clone, Error)]

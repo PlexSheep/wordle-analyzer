@@ -87,9 +87,7 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
             buf.push(w)
         }
         // sort by frequency
-        buf.sort_by(|a, b| {
-            a.1.partial_cmp(&b.1).unwrap()
-        });
+        buf.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
         buf.reverse();
         Ok(buf)
     }
