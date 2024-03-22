@@ -58,7 +58,7 @@ fn main() -> anyhow::Result<()> {
     let mut _guess: Word;
     loop {
         response = solver.play(&mut game)?;
-        println!("{response}");
+        println!("{}. guess: {response}", game.step() - 1);
 
         if response.finished() {
             break;

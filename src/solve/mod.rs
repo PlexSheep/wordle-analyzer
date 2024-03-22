@@ -3,7 +3,10 @@ use std::{fmt::Display, str::FromStr};
 use crate::{
     error::{Error, WResult},
     game::{response::*, summary::Summary, Game},
-    wlist::{word::WordData, WordList},
+    wlist::{
+        word::{Word, WordData},
+        WordList,
+    },
 };
 
 pub mod naive;
@@ -11,7 +14,10 @@ pub mod stupid;
 
 pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug {
     fn build(wordlist: &'wl WL) -> WResult<Self>;
-    fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse>;
+    fn guess_for(&self, game: &Game<'wl, WL>) -> Word;
+    fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
+        Ok(game.guess(self.guess_for(&game))?)
+    }
     fn solve(&self, game: &mut Game<'wl, WL>) -> WResult<Option<WordData>> {
         let mut resp: GuessResponse;
         loop {
