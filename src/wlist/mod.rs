@@ -44,7 +44,22 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
         for (k, v) in wpairs {
             hm.insert(k.into(), *v);
         }
-        WordMap::new(hm)
+        WordMap::from(hm)
     }
     fn get_word(&self, word: &Word) -> Option<WordData>;
+    fn letter_frequency(&self) -> WordMap {
+        // PERF: this function has complexity O(n²)!
+        let mut cmap: HashMap<char, usize> = HashMap::new();
+        // count the chars in each word
+        for word in self.wordmap().iter() {
+            for c in word.0.chars() {
+                if let Some(inner_value) = cmap.get_mut(&c) {
+                    *inner_value += 1;
+                }
+            }
+        }
+        // make all chars to strings
+        let cmap: HashMap<Word, usize> = cmap.into_iter().map(|p| (p.0.to_string(), p.1)).collect();
+        WordMap::from_absolute(cmap)
+    }
 }

@@ -21,8 +21,10 @@ pub struct WordMap {
 }
 
 impl WordMap {
-    pub fn new(inner: HashMap<Word, Frequency>) -> Self {
-        Self { inner }
+    pub fn new() -> Self {
+        Self {
+            inner: HashMap::new(),
+        }
     }
     pub fn keys(&self) -> std::collections::hash_map::Keys<'_, String, Frequency> {
         self.inner.keys()
@@ -70,6 +72,12 @@ impl WordMap {
             None => None,
         }
     }
+    pub fn from_absolute(abs: HashMap<Word, usize>) -> Self {
+        let n: f64 = abs.keys().len() as f64;
+        let relative: HashMap<Word, Frequency> =
+            abs.into_iter().map(|p| (p.0, p.1 as f64 / n)).collect();
+        relative.into()
+    }
 }
 
 impl std::fmt::Debug for WordMap {
@@ -87,5 +95,11 @@ impl std::fmt::Debug for WordMap {
                 self.n_common()
             ),
         )
+    }
+}
+
+impl From<HashMap<Word, Frequency>> for WordMap {
+    fn from(value: HashMap<Word, Frequency>) -> Self {
+        Self { inner: value }
     }
 }
