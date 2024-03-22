@@ -78,10 +78,13 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     /// if the game is finished.
     pub fn guess(&mut self, guess: Word) -> GameResult<GuessResponse> {
         if guess.len() != self.length {
-            return Err(GameError::GuessHasWrongLength);
+            return Err(GameError::GuessHasWrongLength(guess.len()));
         }
         if self.finished || self.step > self.max_steps {
             return Err(GameError::TryingToPlayAFinishedGame);
+        }
+        if self.wordlist.get_word(&guess).is_none() {
+            return Err(GameError::WordNotInWordlist(guess));
         }
         self.step += 1;
 
@@ -101,7 +104,8 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             evaluation.push((c, status));
         }
 
-        let mut response = GuessResponse::new(guess, evaluation, &self);
+        let response = GuessResponse::new(guess, evaluation, self);
+        self.responses.push(response.clone());
         self.finished = response.finished();
         Ok(response)
     }
@@ -127,6 +131,13 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     }
     pub fn responses(&self) -> &Vec<GuessResponse> {
         &self.responses
+    }
+    pub fn last_response(&self) -> Option<&GuessResponse> {
+        self.responses().last()
+    }
+
+    pub fn wordlist(&self) -> &WL {
+        self.wordlist
     }
 }
 

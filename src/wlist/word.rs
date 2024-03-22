@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::write;
+use std::hash::Hash;
 
 use libpt::log::debug;
 #[cfg(feature = "serde")]
@@ -11,7 +12,7 @@ pub type Frequency = f64;
 pub type Word = String;
 pub type WordData = (Word, Frequency);
 pub type ManyWords<'a> = Vec<&'a Word>;
-pub type ManyWordDatas<'a> = Vec<(&'a Word, &'a Frequency)>;
+pub type ManyWordDatas = Vec<(Word, Frequency)>;
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -66,9 +67,9 @@ impl WordMap {
     pub fn inner(&self) -> &HashMap<Word, Frequency> {
         &self.inner
     }
-    pub fn get(&self, word: &Word) -> Option<WordData> {
-        match self.inner.get(word) {
-            Some(f) => Some((word.clone(), *f)),
+    pub fn get<I: std::fmt::Display>(&self, word: I) -> Option<WordData> {
+        match self.inner.get(&word.to_string()) {
+            Some(f) => Some((word.to_string(), *f)),
             None => None,
         }
     }
@@ -104,7 +105,7 @@ impl From<HashMap<Word, Frequency>> for WordMap {
     }
 }
 
-impl From<WordMap > for HashMap<Word, Frequency>{
+impl From<WordMap> for HashMap<Word, Frequency> {
     fn from(value: WordMap) -> Self {
         value.inner
     }

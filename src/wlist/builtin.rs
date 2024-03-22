@@ -19,7 +19,7 @@ impl super::WordList for BuiltinWList {
         &self.words
     }
     fn get_word(&self, word: &Word) -> Option<super::WordData> {
-        self.words.get(&word)
+        self.words.get(word)
     }
 }
 

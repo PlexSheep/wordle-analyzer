@@ -1,4 +1,7 @@
+use libpt::log::debug;
 use rand::seq::IteratorRandom;
+
+use regex::Regex;
 
 use std::collections::HashMap;
 use std::ops::RangeBounds;
@@ -14,13 +17,16 @@ pub type AnyWordlist = Box<dyn WordList>;
 
 pub trait WordList: Clone + std::fmt::Debug + Default {
     fn solutions(&self) -> ManyWordDatas {
-        let wmap = self.wordmap();
+        let wmap = self.wordmap().clone();
         let threshold = wmap.threshold();
-        wmap.iter().filter(|i| *i.1 > threshold).collect()
+        wmap.iter()
+            .filter(|i| *i.1 > threshold)
+            .map(|p| (p.0.clone(), *p.1))
+            .collect()
     }
     fn rand_solution(&self) -> WordData {
         let mut rng = rand::thread_rng();
-        let sol = *self.solutions().iter().choose(&mut rng).unwrap();
+        let sol = self.solutions().iter().choose(&mut rng).unwrap().clone();
         (sol.0.to_owned(), sol.1.to_owned())
     }
     fn rand_word(&self) -> WordData {
@@ -61,5 +67,29 @@ pub trait WordList: Clone + std::fmt::Debug + Default {
         // convert to relative frequency
         let n: f64 = cmap.keys().len() as f64;
         cmap.into_iter().map(|p| (p.0, p.1 as f64 / n)).collect()
+    }
+    fn raw_wordlist(&self) -> String {
+        let mut buf = String::new();
+        for w in self.wordmap().keys() {
+            buf += &w;
+            buf += "\n";
+        }
+        buf
+    }
+    fn get_words_matching(&self, pattern: String) -> WResult<ManyWordDatas> {
+        let pattern = Regex::new(&pattern)?;
+        let hay = self.raw_wordlist();
+        let keys = pattern.captures_iter(&hay);
+        let mut buf = ManyWordDatas::new();
+        for k in keys {
+            debug!("match: {k:?}");
+            let w: WordData = self.wordmap().get(&k[0]).unwrap();
+            buf.push(w)
+        }
+        // sort by frequency
+        buf.sort_by(|a, b| {
+            a.1.partial_cmp(&b.1).unwrap()
+        });
+        Ok(buf)
     }
 }

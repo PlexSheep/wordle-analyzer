@@ -54,8 +54,8 @@ fn main() -> anyhow::Result<()> {
         response = match game.guess(guess) {
             Ok(r) => r,
             Err(err) => match err {
-                GameError::GuessHasWrongLength => {
-                    println!("word length: must be {} long", game.length());
+                GameError::GuessHasWrongLength(len) => {
+                    println!("word length: must be {} long but is {}", game.length(), len);
                     continue;
                 }
                 _ => {

@@ -62,6 +62,14 @@ impl GuessResponse {
             None
         }
     }
+
+    pub fn evaluation(&self) -> &[(char, Status)] {
+        &self.evaluation
+    }
+
+    pub fn guess(&self) -> &str {
+        &self.guess
+    }
 }
 
 impl Display for GuessResponse {
