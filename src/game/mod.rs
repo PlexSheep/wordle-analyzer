@@ -60,7 +60,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             solution,
             wordlist: wlist,
             finished: false,
-            responses: Vec::new()
+            responses: Vec::new(),
         };
 
         Ok(game)

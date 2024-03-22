@@ -71,7 +71,11 @@ fn main() -> anyhow::Result<()> {
         }
     }
     if response.won() {
-        println!("You win! You took {} guesses. {:?}", game.step() - 1, game.solution());
+        println!(
+            "You win! You took {} guesses. {:?}",
+            game.step() - 1,
+            game.solution()
+        );
     } else {
         println!("You lose! The solution was {:?}.", game.solution());
     }
