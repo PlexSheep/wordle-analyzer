@@ -23,6 +23,7 @@ where
     solution: WordData,
     wordlist: &'wl WL,
     finished: bool,
+    responses: Vec<GuessResponse>,
     // TODO: keep track of the letters the user has tried
 }
 
@@ -57,8 +58,9 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             max_steps,
             step: 1,
             solution,
-            wordlist: &wlist,
+            wordlist: wlist,
             finished: false,
+            responses: Vec::new()
         };
 
         Ok(game)
@@ -122,6 +124,9 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 
     pub fn max_steps(&self) -> usize {
         self.max_steps
+    }
+    pub fn responses(&self) -> &Vec<GuessResponse> {
+        &self.responses
     }
 }
 
