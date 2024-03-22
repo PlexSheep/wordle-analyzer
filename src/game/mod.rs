@@ -94,7 +94,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         for (idx, c) in guess.chars().enumerate() {
             if compare_solution.chars().nth(idx) == Some(c) {
                 status = Status::Matched;
-                compare_solution = compare_solution.replace(c, "_");
+                compare_solution.replace_range(idx..idx+1, "_");
             } else if compare_solution.contains(c) {
                 status = Status::Exists;
                 compare_solution = compare_solution.replacen(c, "_", 1);

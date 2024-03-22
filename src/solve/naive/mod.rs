@@ -35,7 +35,9 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             .get_words_matching(pattern)
             .expect("the solution does not exist in the wordlist")
             .iter()
+            // only words that have not been guessed yet
             .filter(|p| !game.made_guesses().contains(&&p.0))
+            // only words that contain the letters we found earlier (that were not matched)
             .filter(|p| {
                 // TODO: don't repeat unmatched contained chars on the same position twice #2
                 let mut fits = true;
