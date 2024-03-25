@@ -9,32 +9,34 @@ use crate::{
     },
 };
 
+#[cfg(feature = "builtin")]
 pub mod naive;
+#[cfg(feature = "builtin")]
 pub use naive::NaiveSolver;
+#[cfg(feature = "builtin")]
 pub mod stupid;
+#[cfg(feature = "builtin")]
 pub use stupid::StupidSolver;
 
 pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized {
     fn build(wordlist: &'wl WL) -> WResult<Self>;
     fn guess_for(&self, game: &Game<'wl, WL>) -> Word;
-    fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
-        Ok(game.guess(self.guess_for(&game))?)
+    fn make_a_move(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
+        Ok(game.guess(self.guess_for(game))?)
     }
-    fn solve(&self, game: &mut Game<'wl, WL>) -> WResult<Option<WordData>> {
+    fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
         let mut resp: GuessResponse;
         loop {
-            resp = self.play(game)?;
+            resp = self.make_a_move(game)?;
             if game.finished() {
                 break;
             }
         }
-        Ok(resp.solution())
+        Ok(resp)
     }
-    fn play_n(&self, games: &'wl mut Vec<Game<'wl, WL>>) -> WResult<Summary<'wl, WL>> {
-        for game in games.iter_mut() {
-            self.play(game)?;
-        }
-        Ok(Summary::from(games))
+    fn solve(&self, game: &Game<'wl, WL>) -> WResult<Option<WordData>> {
+        let mut game = game.clone();
+        Ok(self.play(&mut game)?.solution())
     }
     fn boxed(self) -> Box<Self> {
         Box::new(self)

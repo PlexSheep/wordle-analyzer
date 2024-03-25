@@ -13,9 +13,9 @@ keywords = ["wordle", "benchmark"]
 default-run = "wordlec"
 
 [features]
-default = ["game", "bench", "tui", "solve", "builtin_wlist", "serde"]
-builtin_wlist = ["dep:serde_json", "serde"]
-game = ["builtin_wlist"]
+default = ["game", "bench", "tui", "solve", "builtin", "serde"]
+builtin = ["dep:serde_json", "serde"]
+game = []
 solve = ["game"]
 tui = ["cli"]
 cli = ["dep:clap"]
@@ -36,14 +36,19 @@ thiserror = "1.0.58"
 [[bin]]
 name = "wordlec"
 path = "src/bin/game/cli.rs"
-required-features = ["game", "cli"]
+required-features = ["game", "cli", "builtin"]
 
 [[bin]]
 name = "wordlet"
 path = "src/bin/game/tui.rs"
-required-features = ["tui", "game"]
+required-features = ["tui", "game", "builtin"]
 
 [[bin]]
 name = "wordlesolve"
 path = "src/bin/solve/simple.rs"
-required-features = ["solve", "cli"]
+required-features = ["solve", "cli", "builtin"]
+
+[[bin]]
+name = "wordlebench"
+path = "src/bin/bench/cli.rs"
+required-features = ["solve", "cli", "bench", "builtin"]

@@ -6,7 +6,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::ops::RangeBounds;
 
-#[cfg(feature = "builtin_wlist")]
+#[cfg(feature = "builtin")]
 pub mod builtin;
 pub mod word;
 use word::*;

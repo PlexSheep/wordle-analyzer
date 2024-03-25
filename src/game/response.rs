@@ -15,6 +15,8 @@ pub struct GuessResponse {
     evaluation: Evaluation,
     finish: bool,
     solution: WordData,
+    step: usize,
+    max_steps: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -40,6 +42,8 @@ impl GuessResponse {
             evaluation: status,
             finish,
             solution: game.solution().clone(),
+            step: game.step(),
+            max_steps: game.max_steps(),
         }
     }
 
