@@ -3,13 +3,22 @@ use crate::wlist::WordList;
 use anyhow::Ok;
 use colored::{ColoredString, Colorize};
 use libpt::log::debug;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 use super::Game;
 
+#[derive(Debug, Clone, PartialEq, Copy, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct AtomicEvaluation {
+    char: char,
+    status: Status,
+}
 pub type Evaluation = Vec<(char, Status)>;
 
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GuessResponse {
     guess: Word,
     evaluation: Evaluation,
@@ -20,6 +29,7 @@ pub struct GuessResponse {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Status {
     None = 0,
     Exists = 1,
@@ -69,6 +79,14 @@ impl GuessResponse {
 
     pub fn guess(&self) -> &Word {
         &self.guess
+    }
+
+    pub fn step(&self) -> usize {
+        self.step
+    }
+
+    pub fn max_steps(&self) -> usize {
+        self.max_steps
     }
 }
 

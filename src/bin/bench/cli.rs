@@ -47,25 +47,9 @@ fn main() -> anyhow::Result<()> {
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
     let solver = cli.solver.to_solver(&wl);
-    let mut game = builder.build()?;
+    let bench = cli.solver.to_solver(&wl);
 
-    debug!("{game:#?}");
-
-    let mut response: GuessResponse;
-    let mut _guess: Word;
-    loop {
-        response = solver.make_a_move(&mut game)?;
-        println!("{}. guess: {response}", game.step() - 1);
-
-        if response.finished() {
-            break;
-        }
-    }
-    if response.won() {
-        println!("You win! You took {} guesses.", game.step() - 1);
-    } else {
-        println!("You lose! The solution was {:?}.", game.solution());
-    }
+    todo!();
 
     Ok(())
 }

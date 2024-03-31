@@ -203,7 +203,7 @@ impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
     }
 
     /// build a [`Game`] with the stored configuration
-    pub fn build(&self) -> GameResult<Game<'wl, WL>> {
+    pub fn build(&'wl self) -> GameResult<Game<'wl, WL>> {
         debug!("{:#?}", self);
         let game: Game<WL> =
             Game::build(self.length, self.precompute, self.max_steps, self.wordlist)?;
