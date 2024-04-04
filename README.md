@@ -25,4 +25,4 @@ have to guess words by slowly guessing the letters contained in it.
 
 Included in this repository are the following wordlists:
 
-* [`./data/wordlists/en_dwyl_words.txt`](https://github.com/dwyl/english-words)
+* [3Blue1Brown Top English words -- `./data/wordlists/en_US_3b1b_freq_map.json`](https://github.com/3b1b/videos/tree/master/_2022/wordle/data)
