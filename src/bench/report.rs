@@ -1,6 +1,6 @@
 use chrono::{self, Duration, NaiveDateTime, NaiveTime, TimeDelta};
-use libpt::log::debug;
 use core::panic;
+use libpt::log::debug;
 use std::fmt::Display;
 use std::ops::Div;
 

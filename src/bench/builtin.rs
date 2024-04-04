@@ -18,7 +18,11 @@ where
     SL: Solver<'wl, WL>,
     SL: 'wl,
 {
-    fn build(wordlist: &'wl WL, solver: SL, builder: GameBuilder<'wl, WL>) -> crate::error::WResult<Self> {
+    fn build(
+        wordlist: &'wl WL,
+        solver: SL,
+        builder: GameBuilder<'wl, WL>,
+    ) -> crate::error::WResult<Self> {
         Ok(Self {
             wordlist,
             solver,

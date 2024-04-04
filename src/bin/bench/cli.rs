@@ -2,8 +2,6 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
-use std::thread::sleep_ms;
-
 use clap::Parser;
 use libpt::log::*;
 
