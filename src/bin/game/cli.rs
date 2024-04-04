@@ -58,6 +58,10 @@ fn main() -> anyhow::Result<()> {
                     println!("word length: must be {} long but is {}", game.length(), len);
                     continue;
                 }
+                GameError::WordNotInWordlist(w) => {
+                    println!("bad word: word \"{w}\" is not in the wordlist",);
+                    continue;
+                }
                 _ => {
                     return Err(err.into());
                 }
