@@ -5,11 +5,9 @@
 use clap::Parser;
 use libpt::log::*;
 
-use wordle_analyzer::game::response::GuessResponse;
-
-use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
+use wordle_analyzer::solve::BuiltinSolverNames;
 use wordle_analyzer::wlist::builtin::BuiltinWList;
-use wordle_analyzer::wlist::word::Word;
+
 use wordle_analyzer::{self, game};
 
 #[derive(Parser, Clone, Debug)]
@@ -42,12 +40,12 @@ fn main() -> anyhow::Result<()> {
     debug!("dumping CLI: {:#?}", cli);
 
     let wl = BuiltinWList::default();
-    let builder = game::Game::builder(&wl)
+    let _builder = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
-    let solver = cli.solver.to_solver(&wl);
-    let bench = cli.solver.to_solver(&wl);
+    let _solver = cli.solver.to_solver(&wl);
+    let _bench = cli.solver.to_solver(&wl);
 
     todo!();
 
