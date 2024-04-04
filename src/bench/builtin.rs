@@ -11,8 +11,12 @@ pub struct BuiltinBenchmark<'wl, WL: WordList, SL: Solver<'wl, WL>> {
     builder: GameBuilder<'wl, WL>,
 }
 
-impl<'wl, WL: WordList, SL: Solver<'wl, WL>> Benchmark<'wl, WL, SL>
-    for BuiltinBenchmark<'wl, WL, SL>
+impl<'wl, WL, SL> Benchmark<'wl, WL, SL> for BuiltinBenchmark<'wl, WL, SL>
+where
+    WL: WordList,
+    WL: 'wl,
+    SL: Solver<'wl, WL>,
+    SL: 'wl,
 {
     fn build(wordlist: &'wl WL, solver: SL) -> crate::error::WResult<Self> {
         let builder: GameBuilder<_> = Game::builder(wordlist);
