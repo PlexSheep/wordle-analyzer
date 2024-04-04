@@ -1,4 +1,4 @@
-use libpt::log::{debug, info};
+use libpt::log::{debug, info, trace};
 
 use crate::wlist::word::{ManyWordDatas, Word};
 use crate::wlist::WordList;
@@ -29,7 +29,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                 }
             }
         }
-        debug!("other chars: {:?}", other_chars);
+        trace!("other chars: {:?}", other_chars);
         let matches: ManyWordDatas = game
             .wordlist()
             .get_words_matching(pattern)

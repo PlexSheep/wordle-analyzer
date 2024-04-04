@@ -2,10 +2,14 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
+use std::thread::sleep_ms;
+
 use clap::Parser;
 use libpt::log::*;
 
-use wordle_analyzer::solve::BuiltinSolverNames;
+use wordle_analyzer::bench::builtin::BuiltinBenchmark;
+use wordle_analyzer::bench::{Benchmark, DEFAULT_N};
+use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 
 use wordle_analyzer::{self, game};
@@ -28,26 +32,31 @@ struct Cli {
     /// which solver to use
     #[arg(short, long, default_value_t = BuiltinSolverNames::default())]
     solver: BuiltinSolverNames,
+    /// how many games to play for the benchmark
+    #[arg(short, long, default_value_t = DEFAULT_N)]
+    n: usize,
 }
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     if cli.verbose {
-        Logger::build_mini(Some(Level::TRACE))?;
+        Logger::build_mini(Some(Level::DEBUG))?;
     } else {
         Logger::build_mini(Some(Level::INFO))?;
     }
-    debug!("dumping CLI: {:#?}", cli);
+    trace!("dumping CLI: {:#?}", cli);
 
     let wl = BuiltinWList::default();
-    let _builder = game::Game::builder(&wl)
+    let builder = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
-    let _solver = cli.solver.to_solver(&wl);
-    let _bench = cli.solver.to_solver(&wl);
+    let solver = cli.solver.to_solver(&wl);
+    let bench = BuiltinBenchmark::build(&wl, solver, builder)?;
+    trace!("{bench:#?}");
+    let report = bench.bench(cli.n)?;
 
-    todo!();
+    println!("{report}");
 
     Ok(())
 }

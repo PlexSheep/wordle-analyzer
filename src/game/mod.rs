@@ -2,7 +2,7 @@ use crate::error::*;
 use crate::wlist::word::{ManyWordDatas, ManyWordsRef, Word, WordData};
 use crate::wlist::WordList;
 
-use libpt::log::debug;
+use libpt::log::{debug, trace};
 
 pub mod response;
 use response::GuessResponse;
@@ -56,7 +56,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             length,
             precompute,
             max_steps,
-            step: 1,
+            step: 0,
             solution,
             wordlist: wlist,
             finished: false,
@@ -204,7 +204,7 @@ impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
 
     /// build a [`Game`] with the stored configuration
     pub fn build(&'wl self) -> GameResult<Game<'wl, WL>> {
-        debug!("{:#?}", self);
+        trace!("{:#?}", self);
         let game: Game<WL> =
             Game::build(self.length, self.precompute, self.max_steps, self.wordlist)?;
         Ok(game)

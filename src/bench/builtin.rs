@@ -18,8 +18,7 @@ where
     SL: Solver<'wl, WL>,
     SL: 'wl,
 {
-    fn build(wordlist: &'wl WL, solver: SL) -> crate::error::WResult<Self> {
-        let builder: GameBuilder<_> = Game::builder(wordlist);
+    fn build(wordlist: &'wl WL, solver: SL, builder: GameBuilder<'wl, WL>) -> crate::error::WResult<Self> {
         Ok(Self {
             wordlist,
             solver,
