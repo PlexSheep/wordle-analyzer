@@ -18,12 +18,44 @@ pub mod stupid;
 #[cfg(feature = "builtin")]
 pub use stupid::StupidSolver;
 
+/// Trait for any datatype that can solve [Games][Game].
+///
+/// # Examples
+///
+/// For a detailed example, see the `/bin/solve/simple.rs` (`wordlesolve`) binary.
+///
+/// # Builtins
+///
+/// This [crate] implements a few builtin [Solvers][Solver]:
+///
+/// * [Naive](NaiveSolver) - Keep the found letters and use letters that are confirmed to be
+///                          contained. This is probably the closest thing to how a human would
+///                          play wordle.
+/// * [Stupid](StupidSolver) - Guesses random words that have not been guessed yet.
+///
+/// If you want to have the user select a model, create an enum with it's variants containing your
+/// [Solvers][Solver] and have this enum implement [Solver], see [AnyBuiltinSolver].
 pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized {
+    /// Build and initialize a [Solver]
     fn build(wordlist: &'wl WL) -> WResult<Self>;
+    /// Calculate the next guess for a [Game]
+    ///
+    /// Each [Solver] needs to implement this method themselves, many other methods rely on this to
+    /// play the [Game], such as [play](Solver::play) or [solve](Solver::solve).
     fn guess_for(&self, game: &Game<'wl, WL>) -> Word;
+    /// Make a singular step for a [Game]
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if [guess_for](Solver::guess_for) fails.
     fn make_a_move(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
         Ok(game.guess(self.guess_for(game))?)
     }
+    /// Play a [Game] and return the last [GuessResponse].
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if [make_a_move](Solver::make_a_move) fails.
     fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
         let mut resp: GuessResponse;
         loop {
@@ -34,10 +66,20 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized {
         }
         Ok(resp)
     }
+    /// Play a [Game] and return the solution if one was found
+    ///
+    /// If no solution was found, this function will return [None].
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if [play](Solver::play) fails.
     fn solve(&self, game: &Game<'wl, WL>) -> WResult<Option<WordData>> {
         let mut game = game.clone();
         Ok(self.play(&mut game)?.solution())
     }
+    /// Box the [Solver]
+    ///
+    /// Returns a [Box] containing the [Solver].
     fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
