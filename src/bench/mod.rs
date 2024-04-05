@@ -1,6 +1,8 @@
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
+use std::sync::{Arc, Mutex};
 
 use libpt::log::debug;
+use rayon::prelude::*;
 
 use crate::error::WResult;
 use crate::game::response::GuessResponse;
@@ -17,7 +19,7 @@ pub mod builtin;
 /// Default amount of games to play for a [Benchmark]
 pub const DEFAULT_N: usize = 50;
 
-pub trait Benchmark<'wl, WL, SL>: Clone + Sized + Debug
+pub trait Benchmark<'wl, WL, SL>: Clone + Sized + Debug + Sync
 where
     WL: WordList,
     WL: 'wl,
@@ -40,21 +42,26 @@ where
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     fn bench(&'wl self, n: usize) -> WResult<Report> {
-        // PERF: it would be better to make this multithreaded
         let part = match n / 20 {
             0 => 19,
             other => other,
         };
-        let mut report = Report::new();
+        let report = Arc::new(Mutex::new(Report::new()));
+        let this = std::sync::Arc::new(self);
 
-        for i in 0..n {
-            report.add(self.play()?);
-            if i % part == part - 1 {
-                // TODO: add the report to the struct so that users can poll it to print the status
-                // TODO: update the report in the struct
-            }
-        }
+        (0..n)
+            .into_par_iter()
+            .for_each_with(report.clone(), |outside_data, _i| {
+                let report = outside_data;
+                let r = this
+                    .play()
+                    .expect("error playing the game during benchmark");
+                report.lock().expect("lock is poisoned").add(r);
+            });
 
+        // FIXME: find some way to take the Report from the Mutex
+        // Mutex::into_inner() does not work
+        let mut report: Report = report.lock().unwrap().clone();
         report.finalize();
 
         Ok(report)

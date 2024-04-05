@@ -29,6 +29,7 @@ clap = { version = "4.5.3", features = ["derive"], optional = true }
 colored = { version = "2.1.0", optional = false }
 libpt = "0.4.2"
 rand = "0.8.5"
+rayon = "1.10.0"
 regex = "1.10.3"
 serde = { version = "1.0.197", optional = true, features = ["serde_derive"] }
 serde_json = { version = "1.0.114", optional = true }

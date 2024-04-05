@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+use crate::bench::report::Report;
 use crate::wlist::word::Word;
 
 pub type WResult<T> = std::result::Result<T, Error>;
@@ -25,6 +26,11 @@ pub enum Error {
         #[from]
         source: regex::Error,
     },
+    #[error("Error sharing the benchmark data over multiple threads")]
+    Mutex {
+        #[from]
+        source: std::sync::PoisonError<Report>
+    }
 }
 
 #[derive(Debug, Clone, Error)]

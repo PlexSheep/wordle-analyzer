@@ -15,7 +15,7 @@ use crate::error::WResult;
 
 pub type AnyWordlist = Box<dyn WordList>;
 
-pub trait WordList: Clone + std::fmt::Debug + Default {
+pub trait WordList: Clone + std::fmt::Debug + Default + Sync {
     fn solutions(&self) -> ManyWordDatas {
         let wmap = self.wordmap().clone();
         let threshold = wmap.threshold();

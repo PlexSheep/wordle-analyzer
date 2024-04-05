@@ -37,7 +37,7 @@ pub use stupid::StupidSolver;
 ///
 /// If you want to have the user select a model, create an enum with it's variants containing your
 /// [Solvers][Solver] and have this enum implement [Solver], see [AnyBuiltinSolver].
-pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized {
+pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized + Sync {
     /// Build and initialize a [Solver]
     fn build(wordlist: &'wl WL) -> WResult<Self>;
     /// Calculate the next guess for a [Game]
