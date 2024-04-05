@@ -3,6 +3,7 @@ use core::panic;
 use libpt::log::debug;
 use std::fmt::Display;
 use std::ops::Div;
+use rayon::prelude::*;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -69,9 +70,11 @@ impl Report {
         self.total_steps() as f64 / self.n() as f64
     }
 
-    pub fn avg_time(&self) -> Option<TimeDelta> {
-        let av = self.benchtime()? / self.n() as i32;
-        Some(av)
+    pub fn avg_time(&self) -> TimeDelta {
+        if self.n() == 0 {
+            return TimeDelta::new(0, 0).unwrap();
+        }
+        self.benchtime() / self.n() as i32
     }
 
     fn rating_steps(&self) -> f64 {
@@ -83,20 +86,25 @@ impl Report {
         WEIGHTING_WIN * (1.0 - self.avg_win())
     }
 
-    fn rating_time(&self) -> Option<f64> {
-        let n = 1.0 / (1.0 + (self.avg_time()?.num_nanoseconds()? as f64).exp());
-        Some(WEIGHTING_TIME * (1.0 - n))
+    fn rating_time(&self) -> f64 {
+        let n = 1.0
+            / (1.0
+                + (self
+                    .avg_time()
+                    .num_nanoseconds()
+                    .expect("nanoseconds overflow") as f64)
+                    .exp());
+        WEIGHTING_TIME * (1.0 - n)
     }
 
-    pub fn rating(&self) -> Option<f64> {
+    pub fn rating(&self) -> f64 {
         let rating_steps: f64 = self.rating_steps();
         let rating_win: f64 = self.rating_win();
-        let rating_time: f64 = self.rating_time()?;
+        let rating_time: f64 = self.rating_time();
         debug!("partial rating - steps: {}", rating_steps);
         debug!("partial rating - win: {}", rating_win);
         debug!("partial rating - time: {:?}", rating_time);
-        let r = rating_win + rating_time + rating_steps;
-        Some(r)
+        rating_win + rating_time + rating_steps
     }
 
     /// finalize the record
@@ -116,8 +124,8 @@ impl Report {
         self.finished
     }
 
-    pub fn benchtime(&self) -> Option<TimeDelta> {
-        self.benchtime
+    pub fn benchtime(&self) -> TimeDelta {
+        chrono::Local::now().naive_local() - self.start
     }
 
     pub fn max_steps(&self) -> usize {
@@ -132,9 +140,6 @@ impl Display for Report {
     ///
     /// This will panic if the [Report] is not finished
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if !self.finished {
-            panic!("can only display finished reports");
-        }
         write!(
             f,
             "n: {}, win_ratio: {:.2}%, avg_score: {:.4} steps until finish, avgerage time per game: {}μs, \n\
@@ -143,9 +148,9 @@ impl Display for Report {
             self.n(),
             self.avg_win() * 100.0,
             self.avg_steps(),
-            self.avg_time().unwrap().num_microseconds().expect("overflow when converting to micrseconds"),
-            self.rating().unwrap(),
-            self.benchtime().unwrap().num_milliseconds()
+            self.avg_time(),
+            self.rating(),
+            self.benchtime()
         )
     }
 }

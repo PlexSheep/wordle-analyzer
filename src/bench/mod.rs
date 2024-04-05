@@ -30,6 +30,7 @@ where
         wordlist: &'wl WL,
         solver: SL,
         builder: GameBuilder<'wl, WL>,
+        threads: usize
     ) -> crate::error::WResult<Self>;
     fn builder(&'wl self) -> &'wl GameBuilder<'wl, WL>;
     fn make_game(&'wl self) -> WResult<Game<'wl, WL>> {
@@ -42,11 +43,7 @@ where
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     fn bench(&'wl self, n: usize) -> WResult<Report> {
-        let part = match n / 20 {
-            0 => 19,
-            other => other,
-        };
-        let report = Arc::new(Mutex::new(Report::new(self.make_game()?)));
+        let report = self.report_mutex();
         let this = std::sync::Arc::new(self);
 
         (0..n)
@@ -59,11 +56,12 @@ where
                 report.lock().expect("lock is poisoned").add(r);
             });
 
-        // FIXME: find some way to take the Report from the Mutex
-        // Mutex::into_inner() does not work
-        let mut report: Report = report.lock().unwrap().clone();
-        report.finalize();
+        report.lock().expect("lock is poisoned").finalize();
+        drop(report);
 
-        Ok(report)
+        Ok(self.report())
     }
+    // PERF: Somehow returning &Report would be better as we don't need to clone then
+    fn report(&'wl self) -> Report;
+    fn report_mutex(&'wl self) -> Arc<Mutex<Report>>;
 }

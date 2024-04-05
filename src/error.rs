@@ -8,10 +8,15 @@ pub type GameResult<T> = std::result::Result<T, GameError>;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("GameError")]
+    #[error("Game Error")]
     GameError {
         #[from]
         source: GameError,
+    },
+    #[error("Benchmark Error")]
+    BenchError {
+        #[from]
+        source: BenchError,
     },
     #[error(transparent)]
     Other {
@@ -41,4 +46,10 @@ pub enum GameError {
     TryingToPlayAFinishedGame,
     #[error("Tried to guess a word that is not in the wordlist ({0})")]
     WordNotInWordlist(Word),
+}
+
+#[derive(Debug, Clone, Error)]
+pub enum BenchError {
+    #[error("Trying to modify a finished report")]
+    ModifyFinishedReport
 }
