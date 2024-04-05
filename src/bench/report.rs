@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::game::response::GuessResponse;
 
-pub const WEIGHTING_SCORE: f64 = 0.9;
+pub const WEIGHTING_SCORE: f64 = 0.6;
 pub const WEIGHTING_TIME: f64 = 0.1;
-pub const WEIGHTING_WIN: f64 = 0.0;
+pub const WEIGHTING_WIN: f64 = 0.3;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Report {
@@ -70,38 +70,24 @@ impl Report {
         Some(av)
     }
 
+    fn rating_score(&self) -> f64 {
+        WEIGHTING_SCORE * self.avg_score()
+    }
+
+    fn rating_win(&self) -> f64 {
+        WEIGHTING_WIN * (1.0 - self.avg_win()) * 10.0
+    }
+
+    fn rating_time(&self) -> Option<f64> {
+        Some(WEIGHTING_TIME * self.avg_time()?.num_nanoseconds()? as f64 / 100000.0)
+    }
+
     pub fn rating(&self) -> Option<f64> {
-        assert_eq!(WEIGHTING_WIN + WEIGHTING_SCORE + WEIGHTING_TIME, 1.0);
-        debug!(
-            "partial rating - score: {}",
-            WEIGHTING_SCORE * self.avg_score()
-        );
-        debug!(
-            "partial rating - win: {}",
-            WEIGHTING_WIN * (1.0 - self.avg_win())
-        );
-        // FIXME: this is not normalized, which can lead to negative score
-        debug!(
-            "partial rating - time: {}",
-            WEIGHTING_TIME
-                * (1.0
-                    - (1_000_000_000.0
-                        / self
-                            .avg_time()?
-                            .num_nanoseconds()
-                            .expect("took so many ns per game that an integer overflow occured")
-                            as f64))
-        );
-        let r = WEIGHTING_SCORE * self.avg_score()
-            + WEIGHTING_WIN * (1.0 - self.avg_win())
-            + WEIGHTING_TIME
-                * (1.0
-                    - (1_000_000_000.0
-                        / self
-                            .avg_time()?
-                            .num_nanoseconds()
-                            .expect("took so many ns per game that an integer overflow occured")
-                            as f64));
+        assert_eq!((WEIGHTING_WIN + WEIGHTING_SCORE + WEIGHTING_TIME).round(), 1.0);
+        debug!("partial rating - score: {}", self.rating_score());
+        debug!("partial rating - win: {}", self.rating_win());
+        debug!("partial rating - time: {:?}", self.rating_time()?);
+        let r = self.rating_win() + self.rating_time()? + self.rating_score();
         Some(r)
     }
 
