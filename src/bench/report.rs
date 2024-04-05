@@ -8,10 +8,12 @@ use std::ops::Div;
 use serde::{Deserialize, Serialize};
 
 use crate::game::response::GuessResponse;
+use crate::game::Game;
+use crate::wlist::WordList;
 
-pub const WEIGHTING_SCORE: f64 = 0.6;
-pub const WEIGHTING_TIME: f64 = 0.1;
-pub const WEIGHTING_WIN: f64 = 0.3;
+pub const WEIGHTING_STEPS: f64 = 1000.0;
+pub const WEIGHTING_TIME: f64 = 50.0;
+pub const WEIGHTING_WIN: f64 = 1000.0;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Report {
@@ -21,16 +23,18 @@ pub struct Report {
     benchtime: Option<TimeDelta>,
     /// is the benchmark finished?
     finished: bool,
+    max_steps: usize,
 }
 
 impl Report {
-    pub fn new() -> Self {
+    pub fn new<WL: WordList>(example_game: Game<'_, WL>) -> Self {
         Self {
             data: Vec::new(),
             start: chrono::Local::now().naive_local(),
             benchtime: None,
             end: None,
             finished: false,
+            max_steps: example_game.max_steps(),
         }
     }
     pub fn add(&mut self, data: GuessResponse) {
@@ -55,14 +59,14 @@ impl Report {
         self.total_wins() as f64 / self.n() as f64
     }
 
-    pub fn total_score(&self) -> usize {
-        let mut score: usize = 0;
-        self.data.iter().for_each(|d| score += d.step());
-        score
+    pub fn total_steps(&self) -> usize {
+        let mut steps: usize = 0;
+        self.data.iter().for_each(|d| steps += d.step() - 1);
+        steps
     }
 
-    pub fn avg_score(&self) -> f64 {
-        self.total_score() as f64 / self.n() as f64
+    pub fn avg_steps(&self) -> f64 {
+        self.total_steps() as f64 / self.n() as f64
     }
 
     pub fn avg_time(&self) -> Option<TimeDelta> {
@@ -70,24 +74,28 @@ impl Report {
         Some(av)
     }
 
-    fn rating_score(&self) -> f64 {
-        WEIGHTING_SCORE * self.avg_score()
+    fn rating_steps(&self) -> f64 {
+        let n = self.avg_steps() / self.max_steps() as f64;
+        WEIGHTING_STEPS * n
     }
 
     fn rating_win(&self) -> f64 {
-        WEIGHTING_WIN * (1.0 - self.avg_win()) * 10.0
+        WEIGHTING_WIN * (1.0 - self.avg_win())
     }
 
     fn rating_time(&self) -> Option<f64> {
-        Some(WEIGHTING_TIME * self.avg_time()?.num_nanoseconds()? as f64 / 100000.0)
+        let n = 1.0 / (1.0 + (self.avg_time()?.num_nanoseconds()? as f64).exp());
+        Some(WEIGHTING_TIME * (1.0 - n))
     }
 
     pub fn rating(&self) -> Option<f64> {
-        assert_eq!((WEIGHTING_WIN + WEIGHTING_SCORE + WEIGHTING_TIME).round(), 1.0);
-        debug!("partial rating - score: {}", self.rating_score());
-        debug!("partial rating - win: {}", self.rating_win());
-        debug!("partial rating - time: {:?}", self.rating_time()?);
-        let r = self.rating_win() + self.rating_time()? + self.rating_score();
+        let rating_steps: f64 = self.rating_steps();
+        let rating_win: f64 = self.rating_win();
+        let rating_time: f64 = self.rating_time()?;
+        debug!("partial rating - steps: {}", rating_steps);
+        debug!("partial rating - win: {}", rating_win);
+        debug!("partial rating - time: {:?}", rating_time);
+        let r = rating_win + rating_time + rating_steps;
         Some(r)
     }
 
@@ -111,6 +119,10 @@ impl Report {
     pub fn benchtime(&self) -> Option<TimeDelta> {
         self.benchtime
     }
+
+    pub fn max_steps(&self) -> usize {
+        self.max_steps
+    }
 }
 
 impl Display for Report {
@@ -130,7 +142,7 @@ impl Display for Report {
             ",
             self.n(),
             self.avg_win() * 100.0,
-            self.avg_score(),
+            self.avg_steps(),
             self.avg_time().unwrap().num_microseconds().expect("overflow when converting to micrseconds"),
             self.rating().unwrap(),
             self.benchtime().unwrap().num_milliseconds()

@@ -46,7 +46,7 @@ where
             0 => 19,
             other => other,
         };
-        let report = Arc::new(Mutex::new(Report::new()));
+        let report = Arc::new(Mutex::new(Report::new(self.make_game()?)));
         let this = std::sync::Arc::new(self);
 
         (0..n)
