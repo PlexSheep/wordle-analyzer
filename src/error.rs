@@ -29,8 +29,8 @@ pub enum Error {
     #[error("Error sharing the benchmark data over multiple threads")]
     Mutex {
         #[from]
-        source: std::sync::PoisonError<Report>
-    }
+        source: std::sync::PoisonError<Report>,
+    },
 }
 
 #[derive(Debug, Clone, Error)]
