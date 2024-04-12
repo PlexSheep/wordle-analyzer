@@ -11,7 +11,6 @@ use super::{Benchmark, Report};
 
 #[derive(Debug, Clone)]
 pub struct BuiltinBenchmark<'wl, WL: WordList, SL: Solver<'wl, WL>> {
-    wordlist: &'wl WL,
     solver: SL,
     builder: GameBuilder<'wl, WL>,
     report: Arc<Mutex<Report>>,
@@ -33,7 +32,6 @@ where
         info!("using {threads} threads for benchmarking");
         rayon::ThreadPoolBuilder::new().num_threads(threads).build_global().unwrap();
         Ok(Self {
-            wordlist,
             solver,
             report: Arc::new(Mutex::new(Report::new(builder.build()?))),
             builder,
