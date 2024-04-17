@@ -11,7 +11,8 @@ use wordle_analyzer::bench::builtin::BuiltinBenchmark;
 use wordle_analyzer::bench::report::Report;
 use wordle_analyzer::bench::{Benchmark, DEFAULT_N};
 use wordle_analyzer::error::WResult;
-use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
+use wordle_analyzer::game::GameBuilder;
+use wordle_analyzer::solve::{AnyBuiltinSolver, BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 
 use wordle_analyzer::{self, game};
@@ -54,24 +55,22 @@ fn main() -> anyhow::Result<()> {
     trace!("dumping CLI: {:#?}", cli);
 
     let wl = BuiltinWList::default();
-    let builder = game::Game::builder(&wl)
+    let builder: GameBuilder<'_, BuiltinWList> = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
-    let solver = cli.solver.to_solver(&wl);
-    let bench = Arc::new(BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?);
-    let bench_running = bench.clone();
+    let solver: AnyBuiltinSolver<'_, BuiltinWList> = cli.solver.to_solver(&wl);
+    let mut bench = BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?;
     trace!("{bench:#?}");
     let n = cli.n;
-    let bench_th: std::thread::JoinHandle<WResult<Report>> =
-        std::thread::spawn(move || bench_running.bench(n));
+    bench.start(n)?;
 
-    while !bench_th.is_finished() {
+    while !bench.is_finished()? {
         println!("{}", bench.report());
     }
 
-    // finished report
-    println!("{}", bench_th.join().expect("thread go boom")?);
 
+    // FIXME: Rustc thinks wl is borrowed at this point, but it is not!!!!! Or at least it should
+    // not be
     Ok(())
 }

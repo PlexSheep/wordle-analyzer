@@ -142,8 +142,12 @@ impl Display for Report {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "n: {}, win_ratio: {:.2}%, avg_score: {:.4} steps until finish, avgerage time per game: {}μs, \n\
-            rating: {:.4}, full time until completion: {}ms
+            "n: {}\n\
+            win_ratio: {:.2}%\n\
+            avg_score: {:.4}\n\
+            avgerage time per game: {}μs\n\
+            full time until completion: {}ms\n\
+            rating: {:.4}\n\
             ",
             self.n(),
             self.avg_win() * 100.0,

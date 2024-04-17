@@ -19,7 +19,7 @@ pub mod builtin;
 /// Default amount of games to play for a [Benchmark]
 pub const DEFAULT_N: usize = 50;
 
-pub trait Benchmark<'wl, WL, SL>: Clone + Sized + Debug + Sync
+pub trait Benchmark<'wl, WL, SL>: Sized + Debug + Sync
 where
     WL: WordList,
     WL: 'wl,
@@ -30,18 +30,24 @@ where
         wordlist: &'wl WL,
         solver: SL,
         builder: GameBuilder<'wl, WL>,
-        threads: usize
+        threads: usize,
     ) -> crate::error::WResult<Self>;
-    fn builder(&'wl self) -> &'wl GameBuilder<'wl, WL>;
+    fn builder(&'wl self) -> GameBuilder<'wl, WL>;
+    fn builder_ref(&'wl self) -> &'wl GameBuilder<'wl, WL>;
     fn make_game(&'wl self) -> WResult<Game<'wl, WL>> {
-        Ok(self.builder().build()?)
+        Ok(self.builder_ref().build()?)
     }
-    fn solver(&'wl self) -> &'wl SL;
+    fn solver(&'wl self) -> SL;
+    fn solver_ref(&'wl self) -> &'wl SL;
     fn play(&'wl self) -> WResult<GuessResponse> {
-        self.solver().play(&mut self.make_game()?)
+        self.solver_ref().play(&mut self.make_game()?)
     }
+    fn start(&'wl mut self, n: usize) -> WResult<()>;
+    fn is_finished(&self) -> Option<bool>;
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
+    // NOTE: This is blocking, use start to let it run in another thread
+    #[deprecated]
     fn bench(&'wl self, n: usize) -> WResult<Report> {
         let report = self.report_mutex();
         let this = std::sync::Arc::new(self);
