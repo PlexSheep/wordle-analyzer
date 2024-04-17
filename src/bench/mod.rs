@@ -1,7 +1,6 @@
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
-use libpt::log::debug;
 use rayon::prelude::*;
 
 use crate::error::WResult;
@@ -42,13 +41,12 @@ where
     fn play(&'wl self) -> WResult<GuessResponse> {
         self.solver_ref().play(&mut self.make_game()?)
     }
-    fn start(&'wl self, n: usize) -> WResult<()>;
-    fn is_finished(&self) -> Option<bool>;
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     // NOTE: This is blocking, use start to let it run in another thread
-    #[deprecated]
-    fn bench(&'wl self, n: usize) -> WResult<Report> {
+    // HACK: Shame on me, but I cannot find out how to share the data over threads, so that we can
+    // make this a start function and just poll records while rayon does the benching.
+    async fn bench(&'wl self, n: usize) -> WResult<Report> {
         let report = self.report_shared();
         let this = std::sync::Arc::new(self);
 

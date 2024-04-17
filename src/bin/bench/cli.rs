@@ -45,7 +45,8 @@ struct Cli {
     threads: usize,
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     if cli.verbose {
         Logger::build_mini(Some(Level::DEBUG))?;
@@ -60,15 +61,32 @@ fn main() -> anyhow::Result<()> {
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
     let solver: AnyBuiltinSolver<'_, BuiltinWList> = cli.solver.to_solver(&wl);
-    let mut bench = BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?;
+    let bench = BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?;
     trace!("{bench:#?}");
-    let n = cli.n;
-    bench.start(n)?;
 
-    while bench.is_finished().is_some_and(|b| b) {
-        println!("{}", bench.report());
+    loop {
+        match tokio::time::timeout(
+            tokio::time::Duration::from_millis(10),
+            bench.bench(cli.n),
+        )
+        .await
+        {
+            Ok(result) => {
+                match result {
+                    Ok(final_report) => {
+                        println!("{}", final_report);
+                    }
+                    Err(err) => {
+                        error!("error while benchmarking: {err:#?}");
+                    }
+                }
+                break;
+            }
+            Err(_timeout) => {
+                println!("{}", bench.report());
+            }
+        }
     }
-
 
     // FIXME: Rustc thinks wl is borrowed at this point, but it is not!!!!! Or at least it should
     // not be
