@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use libpt::log::debug;
 use rayon::prelude::*;
@@ -42,14 +42,14 @@ where
     fn play(&'wl self) -> WResult<GuessResponse> {
         self.solver_ref().play(&mut self.make_game()?)
     }
-    fn start(&'wl mut self, n: usize) -> WResult<()>;
+    fn start(&'wl self, n: usize) -> WResult<()>;
     fn is_finished(&self) -> Option<bool>;
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     // NOTE: This is blocking, use start to let it run in another thread
     #[deprecated]
     fn bench(&'wl self, n: usize) -> WResult<Report> {
-        let report = self.report_mutex();
+        let report = self.report_shared();
         let this = std::sync::Arc::new(self);
 
         (0..n)
@@ -59,15 +59,15 @@ where
                 let r = this
                     .play()
                     .expect("error playing the game during benchmark");
-                report.lock().expect("lock is poisoned").add(r);
+                report.write().expect("lock is poisoned").add(r);
             });
 
-        report.lock().expect("lock is poisoned").finalize();
+        report.write().expect("lock is poisoned").finalize();
         drop(report);
 
         Ok(self.report())
     }
     // PERF: Somehow returning &Report would be better as we don't need to clone then
     fn report(&'wl self) -> Report;
-    fn report_mutex(&'wl self) -> Arc<Mutex<Report>>;
+    fn report_shared(&'wl self) -> Arc<RwLock<Report>>;
 }

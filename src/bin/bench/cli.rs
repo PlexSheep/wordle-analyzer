@@ -65,7 +65,7 @@ fn main() -> anyhow::Result<()> {
     let n = cli.n;
     bench.start(n)?;
 
-    while !bench.is_finished()? {
+    while bench.is_finished().is_some_and(|b| b) {
         println!("{}", bench.report());
     }
 
