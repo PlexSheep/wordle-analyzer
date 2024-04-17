@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use clap::Parser;
 use libpt::log::*;
+use tokio;
 
 use wordle_analyzer::bench::builtin::BuiltinBenchmark;
 use wordle_analyzer::bench::report::Report;
@@ -64,31 +65,17 @@ async fn main() -> anyhow::Result<()> {
     let bench = BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?;
     trace!("{bench:#?}");
 
-    loop {
-        match tokio::time::timeout(
-            tokio::time::Duration::from_millis(10),
-            bench.bench(cli.n),
-        )
-        .await
-        {
-            Ok(result) => {
-                match result {
-                    Ok(final_report) => {
-                        println!("{}", final_report);
-                    }
-                    Err(err) => {
-                        error!("error while benchmarking: {err:#?}");
-                    }
-                }
-                break;
-            }
-            Err(_timeout) => {
-                println!("{}", bench.report());
-            }
-        }
-    }
+    let n = cli.n;
+    let in_progress_bench = tokio::spawn( async move {
+        bench.bench(n)
+    });
 
-    // FIXME: Rustc thinks wl is borrowed at this point, but it is not!!!!! Or at least it should
-    // not be
+    while !bench.is_finished() {
+        tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;
+        println!("{}", bench.report());
+    }
+    in_progress_bench.await;
+    dbg!(bench.report());
+
     Ok(())
 }

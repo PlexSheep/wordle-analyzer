@@ -8,11 +8,12 @@ use crate::wlist::WordList;
 
 use super::{Benchmark, Report};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BuiltinBenchmark<'wl, WL: WordList, SL: Solver<'wl, WL>> {
     solver: SL,
     builder: GameBuilder<'wl, WL>,
     report: Arc<RwLock<Report>>,
+    finished: bool
 }
 
 impl<'wl, WL, SL> Benchmark<'wl, WL, SL> for BuiltinBenchmark<'wl, WL, SL>
@@ -38,6 +39,7 @@ where
             solver,
             report: Arc::new(RwLock::new(Report::new(builder.build()?))),
             builder,
+            finished: false
         })
     }
     fn solver(&self) -> SL {
@@ -59,5 +61,8 @@ where
 
     fn report(&'wl self) -> super::Report {
         self.report.read().expect("lock is poisoned").clone()
+    }
+    fn is_finished(&self) -> bool {
+        self.finished
     }
 }

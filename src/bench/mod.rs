@@ -18,7 +18,7 @@ pub mod builtin;
 /// Default amount of games to play for a [Benchmark]
 pub const DEFAULT_N: usize = 50;
 
-pub trait Benchmark<'wl, WL, SL>: Sized + Debug + Sync
+pub trait Benchmark<'wl, WL, SL>: Sized + Debug + Sync + Clone
 where
     WL: WordList,
     WL: 'wl,
@@ -68,4 +68,5 @@ where
     // PERF: Somehow returning &Report would be better as we don't need to clone then
     fn report(&'wl self) -> Report;
     fn report_shared(&'wl self) -> Arc<RwLock<Report>>;
+    fn is_finished(&self) -> bool;
 }
