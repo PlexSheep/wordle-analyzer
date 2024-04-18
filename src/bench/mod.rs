@@ -18,7 +18,7 @@ pub mod builtin;
 /// Default amount of games to play for a [Benchmark]
 pub const DEFAULT_N: usize = 50;
 
-pub trait Benchmark<'wl, WL, SL>: Sized + Debug + Sync + Clone
+pub trait Benchmark<'wl, WL, SL>: Sized + Debug + Sync
 where
     WL: WordList,
     WL: 'wl,
@@ -44,28 +44,25 @@ where
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     // NOTE: This is blocking, use start to let it run in another thread
-    fn bench(&'wl self, n: usize) -> WResult<Report> {
-        let report = self.report_shared();
-        let this = std::sync::Arc::new(self);
+    fn bench(n: usize, report: Arc<RwLock<Report>>, solver: SL, builder: GameBuilder<'wl, WL>) -> WResult<Report> {
 
         (0..n)
             .into_par_iter()
             .for_each_with(report.clone(), |outside_data, _i| {
                 let report = outside_data;
-                let r = this
-                    .play()
+                let r = solver
+                    .play(&mut builder.build().expect("could not create game"))
                     .expect("error playing the game during benchmark");
                 report.write().expect("lock is poisoned").add(r);
             });
 
         report.write().expect("lock is poisoned").finalize();
-        drop(report);
 
-        Ok(self.report())
+        Ok(report.read().expect("lock is poisoned").clone())
     }
     // PERF: Somehow returning &Report would be better as we don't need to clone then
     fn report(&'wl self) -> Report;
     fn report_shared(&'wl self) -> Arc<RwLock<Report>>;
-    fn start(&self) -> WResult<()>;
+    fn start(&'wl self, n: usize) -> WResult<()>;
     fn is_finished(&self) -> bool;
 }
