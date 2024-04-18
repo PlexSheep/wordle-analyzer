@@ -44,9 +44,7 @@ where
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     // NOTE: This is blocking, use start to let it run in another thread
-    // HACK: Shame on me, but I cannot find out how to share the data over threads, so that we can
-    // make this a start function and just poll records while rayon does the benching.
-    async fn bench(&'wl self, n: usize) -> WResult<Report> {
+    fn bench(&'wl self, n: usize) -> WResult<Report> {
         let report = self.report_shared();
         let this = std::sync::Arc::new(self);
 
@@ -68,5 +66,6 @@ where
     // PERF: Somehow returning &Report would be better as we don't need to clone then
     fn report(&'wl self) -> Report;
     fn report_shared(&'wl self) -> Arc<RwLock<Report>>;
+    fn start(&self) -> WResult<()>;
     fn is_finished(&self) -> bool;
 }

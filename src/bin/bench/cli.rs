@@ -2,9 +2,10 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
+use std::thread::sleep_ms;
+
 use clap::Parser;
 use libpt::log::*;
-use tokio;
 
 use wordle_analyzer::bench::builtin::BuiltinBenchmark;
 use wordle_analyzer::bench::report::Report;
@@ -44,8 +45,7 @@ struct Cli {
     threads: usize,
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     if cli.verbose {
         Logger::build_mini(Some(Level::DEBUG))?;
@@ -63,18 +63,15 @@ async fn main() -> anyhow::Result<()> {
     let bench = BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?;
     trace!("{bench:#?}");
 
-    let n = cli.n;
-    let bench2 = bench.clone();
-    let in_progress_bench = tokio::spawn(async move {
-        bench2.bench(n).await
-    });
+    bench.start()?;
 
-    while !bench.is_finished() {
-        tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;
+    loop {
+        sleep_ms(1000);
         println!("{}", bench.report());
+        if bench.is_finished() {
+            break;
+        }
     }
-    in_progress_bench.await;
-    dbg!(bench.report());
 
     Ok(())
 }

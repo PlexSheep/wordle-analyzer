@@ -2,6 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use libpt::log::info;
 
+use crate::error::WResult;
 use crate::game::{self, GameBuilder};
 use crate::solve::Solver;
 use crate::wlist::WordList;
@@ -64,5 +65,9 @@ where
     }
     fn is_finished(&self) -> bool {
         self.finished
+    }
+    fn start(&self) -> WResult<()> {
+        todo!();
+        Ok(())
     }
 }
