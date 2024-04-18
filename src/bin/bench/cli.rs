@@ -2,8 +2,6 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
-use std::sync::Arc;
-
 use clap::Parser;
 use libpt::log::*;
 use tokio;
@@ -66,8 +64,9 @@ async fn main() -> anyhow::Result<()> {
     trace!("{bench:#?}");
 
     let n = cli.n;
-    let in_progress_bench = tokio::spawn( async move {
-        bench.bench(n)
+    let bench2 = bench.clone();
+    let in_progress_bench = tokio::spawn(async move {
+        bench2.bench(n).await
     });
 
     while !bench.is_finished() {
