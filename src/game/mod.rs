@@ -20,7 +20,7 @@ where
     precompute: bool,
     max_steps: usize,
     step: usize,
-    solution: WordData,
+    solution: Option<WordData>,
     wordlist: &'wl WL,
     finished: bool,
     responses: Vec<GuessResponse>,
@@ -57,7 +57,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             precompute,
             max_steps,
             step: 0,
-            solution,
+            solution: Some(solution),
             wordlist: wlist,
             finished: false,
             responses: Vec::new(),
@@ -71,6 +71,8 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     /// The word will be evaluated against the [solution](Game::solution) of the [Game].
     /// A [GuessResponse] will be formulated, showing us which letters are correctly placed, in the
     /// solution, or just wrong.
+    ///
+    /// Note that you do not need to use the [GuessResponse], it is appended to the game state.
     ///
     /// # Errors
     ///
@@ -88,34 +90,36 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         }
         self.step += 1;
 
-        let mut compare_solution = self.solution.0.clone();
-        let mut evaluation = Vec::new();
-        let mut status: Status;
-        for (idx, c) in guess.chars().enumerate() {
-            if compare_solution.chars().nth(idx) == Some(c) {
-                status = Status::Matched;
-                compare_solution.replace_range(idx..idx + 1, "_");
-            } else if compare_solution.contains(c) {
-                status = Status::Exists;
-                compare_solution = compare_solution.replacen(c, "_", 1);
-            } else {
-                status = Status::None
-            }
-            evaluation.push((c, status));
-        }
-
         let response = GuessResponse::new(guess, evaluation, self);
         self.responses.push(response.clone());
         self.finished = response.finished();
         Ok(response)
     }
 
+    pub fn evaluate(mut solution: WordData, guess: Word) -> Vec<()> {
+        let mut evaluation = Vec::new();
+        let mut status: Status;
+        for (idx, c) in guess.chars().enumerate() {
+            if solution.0.chars().nth(idx) == Some(c) {
+                status = Status::Matched;
+                solution.0.replace_range(idx..idx + 1, "_");
+            } else if solution.0.contains(c) {
+                status = Status::Exists;
+                solution.0 = solution.0.replacen(c, "_", 1);
+            } else {
+                status = Status::None
+            }
+            evaluation.push((c, status));
+        }
+        todo!()
+    }
+
     pub fn length(&self) -> usize {
         self.length
     }
 
-    pub fn solution(&self) -> &WordData {
-        &self.solution
+    pub fn solution(&self) -> Option<&WordData> {
+        self.solution.as_ref()
     }
 
     pub fn step(&self) -> usize {

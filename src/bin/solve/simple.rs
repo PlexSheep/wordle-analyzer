@@ -2,15 +2,19 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
+use std::process::exit;
+
 use clap::{Parser, Subcommand};
 use libpt::cli::{
+    console::style,
+    indicatif,
     repl::{DefaultRepl, Repl},
     strum,
 };
 use libpt::log::*;
-use strum::IntoEnumIterator;
+use strum::{EnumIter, IntoEnumIterator};
 
-use wordle_analyzer::game::response::GuessResponse;
+use wordle_analyzer::game::{response::GuessResponse, Game, GameBuilder};
 
 use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
@@ -35,6 +39,30 @@ struct Cli {
     /// which solver to use
     #[arg(short, long, default_value_t = BuiltinSolverNames::default())]
     solver: BuiltinSolverNames,
+
+    /// set if the solver should play a full native game without interaction
+    #[arg(short, long)]
+    non_interactive: bool,
+}
+
+#[derive(Subcommand, Debug, EnumIter, Clone)]
+enum ReplCommand {
+    /// Let the user input the response to the last guess
+    ///
+    /// Format:
+    ///
+    /// 'x' means wrong character
+    ///
+    /// 'p' means present character
+    ///
+    /// 'c' means correct character
+    Response { encoded: String },
+    /// Let the user input a word they guessed
+    Guess { your_guess: String },
+    /// Let the solver make a guess
+    Solve,
+    /// Leave the Repl
+    Exit,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -45,8 +73,59 @@ fn main() -> anyhow::Result<()> {
         .unwrap();
     trace!("dumping CLI: {:#?}", cli);
 
-    // let repl = libpt::cli::repl::DefaultRepl::<ReplCommand>::default();
+    if cli.non_interactive {
+        play_native_non_interactive(cli)?;
+        exit(0);
+    }
+    help_guess_interactive(cli)
+}
 
+fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
+    let wl = BuiltinWList::default();
+    let builder = game::Game::builder(&wl)
+        .length(cli.length)
+        .max_steps(cli.max_steps)
+        .precompute(cli.precompute);
+    let solver = cli.solver.to_solver(&wl);
+    let mut game = builder.build()?;
+
+    let mut repl = libpt::cli::repl::DefaultRepl::<ReplCommand>::default();
+
+    debug!("entering the repl");
+    loop {
+        // repl.step() should be at the start of your loop
+        // It is here that the repl will get the user input, validate it, and so on
+        match repl.step() {
+            Ok(c) => c,
+            Err(e) => {
+                // if the user requested the help, print in blue, otherwise in red as it's just an
+                // error
+                if let libpt::cli::repl::error::Error::Parsing(e) = &e {
+                    if e.kind() == clap::error::ErrorKind::DisplayHelp {
+                        println!("{}", style(e).cyan());
+                        continue;
+                    }
+                }
+                println!("{}", style(e).red().bold());
+                continue;
+            }
+        };
+
+        // now we can match our defined commands
+        //
+        // only None if the repl has not stepped yet
+        match repl.command().to_owned().unwrap() {
+            ReplCommand::Exit => break,
+            ReplCommand::Guess { your_guess } => {
+                println!("{}", game.guess(your_guess)?)
+            }
+            _ => todo!(),
+        }
+    }
+    Ok(())
+}
+
+fn play_native_non_interactive(cli: Cli) -> anyhow::Result<()> {
     let wl = BuiltinWList::default();
     let builder = game::Game::builder(&wl)
         .length(cli.length)
@@ -72,6 +151,5 @@ fn main() -> anyhow::Result<()> {
     } else {
         println!("You lose! The solution was {:?}.", game.solution());
     }
-
     Ok(())
 }
