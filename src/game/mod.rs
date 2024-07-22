@@ -10,7 +10,6 @@ pub mod response;
 use response::GuessResponse;
 
 pub mod evaluation;
-use evaluation::*;
 
 pub mod summary;
 
