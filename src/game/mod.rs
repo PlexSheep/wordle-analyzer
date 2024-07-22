@@ -9,6 +9,9 @@ use libpt::log::{debug, trace};
 pub mod response;
 use response::GuessResponse;
 
+pub mod evaluation;
+use evaluation::*;
+
 pub mod summary;
 
 use self::response::{Evaluation, Status};
