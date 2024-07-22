@@ -2,15 +2,8 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
-use std::process::exit;
-
-use clap::{Parser, Subcommand};
-use libpt::cli::{
-    console::style,
-    indicatif,
-    repl::{DefaultRepl, Repl},
-    strum,
-};
+use clap::Parser;
+use libpt::cli::{repl::Repl, strum};
 use libpt::log::*;
 use strum::{EnumIter, IntoEnumIterator};
 
