@@ -44,6 +44,7 @@ where
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     // NOTE: This is blocking, use start to let it run in another thread
+    // FIXME: this never stops? Reports just keep getting printed
     fn bench(
         n: usize,
         report: Arc<RwLock<Report>>,

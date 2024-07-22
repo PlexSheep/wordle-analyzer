@@ -76,7 +76,7 @@ where
         let report = self.report_shared();
         let solver = self.solver();
         // TODO: make this run in another thread somehow
-        Self::bench(n, report, solver, &builder);
+        Self::bench(n, report, solver, &builder)?;
         Ok(())
     }
 }
