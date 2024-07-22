@@ -11,6 +11,7 @@ use crate::{
 
 #[cfg(feature = "builtin")]
 pub mod naive;
+use libpt::log::debug;
 #[cfg(feature = "builtin")]
 pub use naive::NaiveSolver;
 #[cfg(feature = "builtin")]
@@ -44,14 +45,14 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized + Sync {
     ///
     /// Each [Solver] needs to implement this method themselves, many other methods rely on this to
     /// play the [Game], such as [play](Solver::play) or [solve](Solver::solve).
-    fn guess_for(&self, game: &Game<'wl, WL>) -> Word;
+    fn guess_for(&self, game: &Game<'wl, WL>) -> WResult<Word>;
     /// Make a singular step for a [Game]
     ///
     /// # Errors
     ///
     /// This function will return an error if [guess_for](Solver::guess_for) fails.
     fn make_a_move(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
-        Ok(game.guess(self.guess_for(game), None)?)
+        Ok(game.guess(self.guess_for(game)?, None)?)
     }
     /// Play a [Game] and return the last [GuessResponse].
     ///
@@ -146,10 +147,11 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for AnyBuiltinSolver<'wl, WL> {
     fn build(wordlist: &'wl WL) -> WResult<Self> {
         Ok(Self::Naive(NaiveSolver::build(wordlist)?))
     }
-    fn guess_for(&self, game: &Game<'wl, WL>) -> Word {
-        match self {
-            Self::Naive(solver) => solver.guess_for(game),
-            Self::Stupid(solver) => solver.guess_for(game),
-        }
+    fn guess_for(&self, game: &Game<'wl, WL>) -> WResult<Word> {
+        debug!("solver: {self:?}");
+        Ok(match self {
+            Self::Naive(solver) => solver.guess_for(game)?,
+            Self::Stupid(solver) => solver.guess_for(game)?,
+        })
     }
 }

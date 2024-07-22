@@ -1,5 +1,6 @@
 use libpt::log::{info, trace};
 
+use crate::error::{Error, SolverError, WResult};
 use crate::wlist::word::{ManyWordDatas, Word};
 use crate::wlist::WordList;
 
@@ -15,7 +16,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
         info!("using naive solver");
         Ok(Self { wl: wordlist })
     }
-    fn guess_for(&self, game: &crate::game::Game<WL>) -> Word {
+    fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
         // HACK: hardcoded length
         let mut pattern: String = String::from(".....");
         let mut other_chars: Vec<char> = Vec::new();
@@ -54,9 +55,10 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             })
             .map(|v| v.to_owned())
             .collect();
-        matches[0].0.to_owned() // FIXME: panicks in interactive solve, when I insert bullshit and
-                                // pretend that there is a solution #5 It also crashes in
-                                // non-interactive mode
+        if matches.is_empty() {
+            return Err(SolverError::NoMatches.into());
+        }
+        Ok(matches[0].0.to_owned())
     }
 }
 

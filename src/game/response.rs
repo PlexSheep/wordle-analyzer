@@ -21,7 +21,6 @@ pub struct AtomicEvaluation {
 pub struct GuessResponse {
     guess: Word,
     evaluation: Evaluation,
-    finish: bool,
     solution: Option<WordData>,
     step: usize,
     max_steps: usize,
@@ -50,10 +49,9 @@ impl From<char> for Status {
 
 impl GuessResponse {
     pub(crate) fn new<WL: WordList>(guess: &Word, status: Evaluation, game: &Game<WL>) -> Self {
-        let new = Self {
+        let mut new = Self {
             guess: guess.to_owned(),
             evaluation: status,
-            finish: game.step() > game.max_steps(),
             solution: game.solution().cloned(),
             step: game.step(),
             max_steps: game.max_steps(),
@@ -62,7 +60,7 @@ impl GuessResponse {
     }
 
     pub fn finished(&self) -> bool {
-        self.finish
+        self.step() > self.max_steps() || self.won()
     }
 
     pub fn won(&self) -> bool {

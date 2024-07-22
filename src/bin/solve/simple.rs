@@ -128,7 +128,7 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
                 println!("{}", game);
             }
             ReplCommand::Solve => {
-                let best_guess = solver.guess_for(&game);
+                let best_guess = solver.guess_for(&game)?;
                 println!("best guess: {best_guess}");
             }
             ReplCommand::Guess {

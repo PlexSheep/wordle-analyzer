@@ -13,6 +13,11 @@ pub enum Error {
         #[from]
         source: GameError,
     },
+    #[error("Solver Error")]
+    SolverError {
+        #[from]
+        source: SolverError,
+    },
     #[error("Benchmark Error")]
     BenchError {
         #[from]
@@ -52,4 +57,10 @@ pub enum GameError {
 pub enum BenchError {
     #[error("Trying to modify a finished report")]
     ModifyFinishedReport,
+}
+
+#[derive(Debug, Clone, Error)]
+pub enum SolverError {
+    #[error("Wordlist has no matches for the gamestate")]
+    NoMatches,
 }
