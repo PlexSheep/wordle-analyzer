@@ -54,7 +54,9 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             })
             .map(|v| v.to_owned())
             .collect();
-        matches[0].0.to_owned()
+        matches[0].0.to_owned() // FIXME: panicks in interactive solve, when I insert bullshit and
+                                // pretend that there is a solution #5 It also crashes in
+                                // non-interactive mode
     }
 }
 
