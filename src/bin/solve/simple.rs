@@ -9,7 +9,7 @@ use libpt::log::*;
 use strum::{EnumIter, IntoEnumIterator};
 
 use wordle_analyzer::game::response::Evaluation;
-use wordle_analyzer::game::{response::GuessResponse, Game, GameBuilder};
+use wordle_analyzer::game::response::GuessResponse;
 
 use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
