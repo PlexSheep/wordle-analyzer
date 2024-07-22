@@ -48,9 +48,9 @@ struct Cli {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     if cli.verbose {
-        Logger::build_mini(Some(Level::DEBUG))?;
+        Logger::builder().set_level(Level::DEBUG).build().unwrap();
     } else {
-        Logger::build_mini(Some(Level::INFO))?;
+        Logger::builder().set_level(Level::INFO).build().unwrap();
     }
     trace!("dumping CLI: {:#?}", cli);
 
@@ -63,7 +63,7 @@ fn main() -> anyhow::Result<()> {
     let bench = BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?;
     trace!("{bench:#?}");
 
-    bench.start()?;
+    bench.start(50, &bench.builder())?;
 
     loop {
         sleep_ms(1000);

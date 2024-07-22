@@ -17,7 +17,7 @@ pub struct BuiltinBenchmark<'wl, WL: WordList, SL: Solver<'wl, WL>> {
     builder: GameBuilder<'wl, WL>,
     report: Arc<RwLock<Report>>,
     finished: AtomicBool,
-    bench_th: Arc<Mutex<Option<JoinHandle<WResult<Report>>>>> // HACK: this is unholy
+    bench_th: Arc<Mutex<Option<JoinHandle<WResult<Report>>>>>, // HACK: this is unholy
 }
 
 impl<'wl, WL, SL> Benchmark<'wl, WL, SL> for BuiltinBenchmark<'wl, WL, SL>
@@ -40,7 +40,7 @@ where
             report: Arc::new(RwLock::new(Report::new(builder.build()?))),
             builder,
             finished: AtomicBool::new(false),
-            bench_th: Arc::new(Mutex::new(None))
+            bench_th: Arc::new(Mutex::new(None)),
         })
     }
     #[inline]
@@ -72,14 +72,11 @@ where
     fn is_finished(&self) -> bool {
         self.finished.load(std::sync::atomic::Ordering::Relaxed)
     }
-    fn start(&'wl self, n: usize) -> WResult<()> {
+    fn start(&'wl self, n: usize, builder: &'wl GameBuilder<'wl, WL>) -> WResult<()> {
         let report = self.report_shared();
         let solver = self.solver();
-        let builder = self.builder();
-        let th = std::thread::spawn(move||{
-            Self::bench(n, report, solver, builder)
-        });
-        *self.bench_th.lock().expect("lock is poisoned") = Some(th);
+        // TODO: make this run in another thread somehow
+        Self::bench(n, report, solver, &builder);
         Ok(())
     }
 }

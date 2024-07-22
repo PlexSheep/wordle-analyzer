@@ -27,7 +27,7 @@ anyhow = "1.0.81"
 chrono = { version = "0.4.37" }
 clap = { version = "4.5.3", features = ["derive"], optional = true }
 colored = { version = "2.1.0", optional = false }
-libpt = "0.4.2"
+libpt = "0.6.0"
 num_cpus = "1.16.0"
 rand = "0.8.5"
 rayon = "1.10.0"

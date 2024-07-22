@@ -68,6 +68,23 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized + Sync {
         }
         Ok(resp)
     }
+    /// Play a [Game] and return the last [GuessResponse].
+    ///
+    /// Like [play](Solver::play) but takes an owned game instead of a mutable reference.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if [make_a_move](Solver::make_a_move) fails.
+    fn play_owned(&self, mut game: Game<'wl, WL>) -> WResult<GuessResponse> {
+        let mut resp: GuessResponse;
+        loop {
+            resp = self.make_a_move(&mut game)?;
+            if game.finished() {
+                break;
+            }
+        }
+        Ok(resp)
+    }
     /// Play a [Game] and return the solution if one was found
     ///
     /// If no solution was found, this function will return [None].

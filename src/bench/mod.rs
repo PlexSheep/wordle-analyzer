@@ -44,14 +44,18 @@ where
     // TODO: add some interface to get reports while the benchmark runs
     // TODO: make the benchmark optionally multithreaded
     // NOTE: This is blocking, use start to let it run in another thread
-    fn bench(n: usize, report: Arc<RwLock<Report>>, solver: SL, builder: GameBuilder<'wl, WL>) -> WResult<Report> {
-
+    fn bench(
+        n: usize,
+        report: Arc<RwLock<Report>>,
+        solver: SL,
+        builder: &'wl GameBuilder<'wl, WL>,
+    ) -> WResult<Report> {
         (0..n)
             .into_par_iter()
             .for_each_with(report.clone(), |outside_data, _i| {
                 let report = outside_data;
                 let r = solver
-                    .play(&mut builder.build().expect("could not create game"))
+                    .play_owned(builder.build().expect("could not create game"))
                     .expect("error playing the game during benchmark");
                 report.write().expect("lock is poisoned").add(r);
             });
@@ -63,6 +67,6 @@ where
     // PERF: Somehow returning &Report would be better as we don't need to clone then
     fn report(&'wl self) -> Report;
     fn report_shared(&'wl self) -> Arc<RwLock<Report>>;
-    fn start(&'wl self, n: usize) -> WResult<()>;
+    fn start(&'wl self, n: usize, builder: &'wl GameBuilder<'wl, WL>) -> WResult<()>;
     fn is_finished(&self) -> bool;
 }

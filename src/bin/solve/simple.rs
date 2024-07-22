@@ -35,9 +35,9 @@ struct Cli {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     if cli.verbose {
-        Logger::build_mini(Some(Level::TRACE))?;
+        Logger::builder().set_level(Level::DEBUG).build().unwrap();
     } else {
-        Logger::build_mini(Some(Level::INFO))?;
+        Logger::builder().set_level(Level::INFO).build().unwrap();
     }
     debug!("dumping CLI: {:#?}", cli);
 
