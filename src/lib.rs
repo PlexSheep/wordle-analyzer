@@ -1,5 +1,5 @@
 #![warn(clippy::all)]
-#![warn(missing_docs)]
+// #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
 /// Default letters of a solution word
