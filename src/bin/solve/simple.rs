@@ -129,6 +129,7 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
             }
             ReplCommand::Solve => {
                 let best_guess = solver.guess_for(&game)?;
+                debug!("game state: {game:?}");
                 println!("best guess: {best_guess}");
             }
             ReplCommand::Guess {
@@ -136,12 +137,13 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
                 evalutation,
             } => {
                 let guess = game.guess(your_guess, Some(evalutation));
+                debug!("your guess: {guess:?}");
                 if guess.is_err() {
                     eprintln!("{}", style(guess.unwrap_err()).red().bold());
                     continue;
                 }
                 println!("{}", guess.unwrap());
-                debug!("current gamestate: {game:#?}");
+                debug!("game state: {game:#?}");
             }
             _ => todo!(),
         }
@@ -164,6 +166,7 @@ fn play_native_non_interactive(cli: Cli) -> anyhow::Result<()> {
     let mut _guess: Word;
     loop {
         response = solver.make_a_move(&mut game)?;
+        debug!("game state: {game:#?}");
         println!("{}. guess: {response}", game.step() - 1);
 
         if response.finished() {

@@ -148,7 +148,6 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for AnyBuiltinSolver<'wl, WL> {
         Ok(Self::Naive(NaiveSolver::build(wordlist)?))
     }
     fn guess_for(&self, game: &Game<'wl, WL>) -> WResult<Word> {
-        debug!("solver: {self:?}");
         Ok(match self {
             Self::Naive(solver) => solver.guess_for(game)?,
             Self::Stupid(solver) => solver.guess_for(game)?,
