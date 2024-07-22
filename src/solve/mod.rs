@@ -51,7 +51,7 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized + Sync {
     ///
     /// This function will return an error if [guess_for](Solver::guess_for) fails.
     fn make_a_move(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
-        Ok(game.guess(self.guess_for(game))?)
+        Ok(game.guess(self.guess_for(game), None)?)
     }
     /// Play a [Game] and return the last [GuessResponse].
     ///

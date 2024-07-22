@@ -21,7 +21,13 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
         let mut other_chars: Vec<char> = Vec::new();
         let response = game.last_response();
         if response.is_some() {
-            for (idx, p) in response.unwrap().evaluation().iter().enumerate() {
+            for (idx, p) in response
+                .unwrap()
+                .evaluation()
+                .clone()
+                .into_iter()
+                .enumerate()
+            {
                 if p.1 == Status::Matched {
                     pattern.replace_range(idx..idx + 1, &p.0.to_string());
                 } else if p.1 == Status::Exists {

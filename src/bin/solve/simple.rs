@@ -2,11 +2,13 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
+use libpt::cli::console::style;
 use libpt::cli::{repl::Repl, strum};
 use libpt::log::*;
 use strum::{EnumIter, IntoEnumIterator};
 
+use wordle_analyzer::game::response::Evaluation;
 use wordle_analyzer::game::{response::GuessResponse, Game, GameBuilder};
 
 use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
@@ -50,8 +52,11 @@ enum ReplCommand {
     ///
     /// 'c' means correct character
     Response { encoded: String },
-    /// Let the user input a word they guessed
-    Guess { your_guess: String },
+    /// Let the user input a word and the response for that word
+    Guess {
+        your_guess: String,
+        evalutation: Evaluation,
+    },
     /// Let the solver make a guess
     Solve,
     /// Leave the Repl
@@ -68,7 +73,7 @@ fn main() -> anyhow::Result<()> {
 
     if cli.non_interactive {
         play_native_non_interactive(cli)?;
-        exit(0);
+        std::process::exit(0);
     }
     help_guess_interactive(cli)
 }
@@ -109,8 +114,11 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
         // only None if the repl has not stepped yet
         match repl.command().to_owned().unwrap() {
             ReplCommand::Exit => break,
-            ReplCommand::Guess { your_guess } => {
-                println!("{}", game.guess(your_guess)?)
+            ReplCommand::Guess {
+                your_guess,
+                evalutation,
+            } => {
+                println!("{}", game.guess(your_guess, Some(evalutation))?)
             }
             _ => todo!(),
         }

@@ -1,3 +1,5 @@
+use core::panic;
+
 use crate::error::*;
 use crate::wlist::word::{ManyWordsRef, Word, WordData};
 use crate::wlist::WordList;
@@ -9,7 +11,7 @@ use response::GuessResponse;
 
 pub mod summary;
 
-use self::response::Status;
+use self::response::{Evaluation, Status};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Game<'wl, WL>
@@ -78,7 +80,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     ///
     /// This function will return an error if the length of the [Word] is wrong It will also error
     /// if the game is finished.
-    pub fn guess(&mut self, guess: Word) -> GameResult<GuessResponse> {
+    pub fn guess(&mut self, guess: Word, eval: Option<Evaluation>) -> GameResult<GuessResponse> {
         if guess.len() != self.length {
             return Err(GameError::GuessHasWrongLength(guess.len()));
         }
@@ -90,13 +92,20 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         }
         self.step += 1;
 
-        let response = GuessResponse::new(guess, evaluation, self);
+        let response;
+        if eval.is_some() && self.solution.is_none() {
+            response = GuessResponse::new(&guess, eval.unwrap(), self);
+        } else if let Some(solution) = self.solution.clone() {
+            response = GuessResponse::new(&guess, Self::evaluate(solution, &guess), self);
+        } else {
+            panic!("there is neither an evaluation nor a predefined solution for this guess");
+        }
         self.responses.push(response.clone());
         self.finished = response.finished();
         Ok(response)
     }
 
-    pub fn evaluate(mut solution: WordData, guess: Word) -> Vec<()> {
+    pub fn evaluate(mut solution: WordData, guess: &Word) -> Evaluation {
         let mut evaluation = Vec::new();
         let mut status: Status;
         for (idx, c) in guess.chars().enumerate() {
@@ -111,7 +120,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             }
             evaluation.push((c, status));
         }
-        todo!()
+        evaluation.into()
     }
 
     pub fn length(&self) -> usize {

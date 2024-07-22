@@ -51,7 +51,7 @@ fn main() -> anyhow::Result<()> {
     let mut guess: Word;
     loop {
         guess = get_word(&cli, game.step())?;
-        response = match game.guess(guess) {
+        response = match game.guess(guess, None) {
             Ok(r) => r,
             Err(err) => match err {
                 GameError::GuessHasWrongLength(len) => {
