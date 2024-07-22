@@ -3,11 +3,12 @@ use std::str::FromStr;
 
 use super::response::Status;
 
+pub type EvaluationUnit = (char, Status);
+
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Evaluation {
     inner: Vec<EvaluationUnit>,
 }
-pub type EvaluationUnit = (char, Status);
 
 impl IntoIterator for Evaluation {
     type Item = EvaluationUnit;
@@ -27,7 +28,10 @@ impl From<Vec<EvaluationUnit>> for Evaluation {
 impl FromStr for Evaluation {
     type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // TODO: make this proper
-        Ok(vec![('x', Status::None)].into())
+        let mut v: Vec<EvaluationUnit> = Vec::new();
+        for c in s.chars() {
+            v.push((c, Status::from(c)))
+        }
+        Ok(v.into())
     }
 }

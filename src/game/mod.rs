@@ -14,7 +14,7 @@ use evaluation::*;
 
 pub mod summary;
 
-use self::response::{Evaluation, Status};
+use self::response::Status;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Game<'wl, WL>
@@ -35,7 +35,7 @@ where
 impl<'wl, WL: WordList> Game<'wl, WL> {
     /// get a new [`GameBuilder`]
     pub fn builder(wl: &'wl WL) -> GameBuilder<'wl, WL> {
-        GameBuilder::new(wl)
+        GameBuilder::new(wl, true)
     }
     /// Create a [Game] of wordle
     ///
@@ -54,15 +54,19 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         precompute: bool,
         max_steps: usize,
         wlist: &'wl WL,
+        generate_solution: bool,
     ) -> GameResult<Self> {
         // TODO: check if the length is in the range bounds of the wordlist
-        let solution = wlist.rand_solution();
         let game: Game<'wl, WL> = Game {
             length,
             precompute,
             max_steps,
             step: 0,
-            solution: Some(solution),
+            solution: if generate_solution {
+                Some(wlist.rand_solution())
+            } else {
+                None
+            },
             wordlist: wlist,
             finished: false,
             responses: Vec::new(),
@@ -203,26 +207,33 @@ pub struct GameBuilder<'wl, WL: WordList> {
     precompute: bool,
     max_steps: usize,
     wordlist: &'wl WL,
+    generate_solution: bool,
 }
 
 impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
     /// make a new [GameBuilder]
     ///
     /// We need a [WordList], so provide one here.
-    pub fn new(wl: &'wl WL) -> Self {
+    pub fn new(wl: &'wl WL, generate_solution: bool) -> Self {
         Self {
             length: super::DEFAULT_WORD_LENGTH,
             precompute: false,
             max_steps: super::DEFAULT_MAX_STEPS,
             wordlist: wl,
+            generate_solution,
         }
     }
 
     /// build a [`Game`] with the stored configuration
     pub fn build(&'wl self) -> GameResult<Game<'wl, WL>> {
         trace!("{:#?}", self);
-        let game: Game<WL> =
-            Game::build(self.length, self.precompute, self.max_steps, self.wordlist)?;
+        let game: Game<WL> = Game::build(
+            self.length,
+            self.precompute,
+            self.max_steps,
+            self.wordlist,
+            self.generate_solution,
+        )?;
         Ok(game)
     }
 

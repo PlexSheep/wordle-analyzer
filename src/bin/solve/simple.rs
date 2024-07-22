@@ -8,7 +8,7 @@ use libpt::cli::{repl::Repl, strum};
 use libpt::log::*;
 use strum::{EnumIter, IntoEnumIterator};
 
-use wordle_analyzer::game::response::Evaluation;
+use wordle_analyzer::game::evaluation::Evaluation;
 use wordle_analyzer::game::response::GuessResponse;
 
 use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
@@ -80,7 +80,7 @@ fn main() -> anyhow::Result<()> {
 
 fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
     let wl = BuiltinWList::default();
-    let builder = game::Game::builder(&wl)
+    let builder = game::GameBuilder::new(&wl, false)
         .length(cli.length)
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
