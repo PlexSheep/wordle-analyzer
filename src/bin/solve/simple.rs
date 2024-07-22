@@ -2,11 +2,8 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
-use clap::{Parser, Subcommand};
-use libpt::cli::{
-    repl::{DefaultRepl, Repl},
-    strum,
-};
+use clap::Parser;
+use libpt::cli::{repl::Repl, strum};
 use libpt::log::*;
 use strum::IntoEnumIterator;
 
