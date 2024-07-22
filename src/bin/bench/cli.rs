@@ -8,9 +8,7 @@ use clap::Parser;
 use libpt::log::*;
 
 use wordle_analyzer::bench::builtin::BuiltinBenchmark;
-use wordle_analyzer::bench::report::Report;
 use wordle_analyzer::bench::{Benchmark, DEFAULT_N};
-use wordle_analyzer::error::WResult;
 use wordle_analyzer::game::GameBuilder;
 use wordle_analyzer::solve::{AnyBuiltinSolver, BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;

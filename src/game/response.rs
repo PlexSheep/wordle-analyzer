@@ -1,8 +1,6 @@
 use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
-use anyhow::Ok;
-use colored::{ColoredString, Colorize};
-use libpt::log::debug;
+use colored::Colorize;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;

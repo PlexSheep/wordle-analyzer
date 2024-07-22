@@ -1,5 +1,5 @@
 use crate::error::*;
-use crate::wlist::word::{ManyWordDatas, ManyWordsRef, Word, WordData};
+use crate::wlist::word::{ManyWordsRef, Word, WordData};
 use crate::wlist::WordList;
 
 use libpt::log::{debug, trace};

@@ -1,4 +1,4 @@
-use libpt::log::{debug, info, trace};
+use libpt::log::{info, trace};
 
 use crate::wlist::word::{ManyWordDatas, Word};
 use crate::wlist::WordList;

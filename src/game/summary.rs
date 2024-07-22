@@ -6,6 +6,12 @@ pub struct Summary<'wl, WL: WordList> {
     data: Vec<&'wl Game<'wl, WL>>,
 }
 
+impl<'wl, WL: WordList> Default for Summary<'wl, WL> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'wl, WL: WordList> Summary<'wl, WL> {
     pub fn new() -> Self {
         Self { data: Vec::new() }

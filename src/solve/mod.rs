@@ -2,7 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use crate::{
     error::{Error, WResult},
-    game::{response::*, summary::Summary, Game},
+    game::{response::*, Game},
     wlist::{
         word::{Word, WordData},
         WordList,

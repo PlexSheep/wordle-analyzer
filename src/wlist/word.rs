@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::write;
-use std::hash::Hash;
 
-use libpt::log::{debug, trace};
+use libpt::log::trace;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +18,12 @@ pub type ManyWordDatas = Vec<(Word, Frequency)>;
 pub struct WordMap {
     #[serde(flatten)]
     inner: HashMap<Word, Frequency>,
+}
+
+impl Default for WordMap {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WordMap {
@@ -68,10 +73,9 @@ impl WordMap {
         &self.inner
     }
     pub fn get<I: std::fmt::Display>(&self, word: I) -> Option<WordData> {
-        match self.inner.get(&word.to_string()) {
-            Some(f) => Some((word.to_string(), *f)),
-            None => None,
-        }
+        self.inner
+            .get(&word.to_string())
+            .map(|f| (word.to_string(), *f))
     }
     pub fn from_absolute(abs: HashMap<Word, usize>) -> Self {
         let n: f64 = abs.keys().len() as f64;

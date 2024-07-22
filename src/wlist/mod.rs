@@ -1,4 +1,3 @@
-use libpt::log::debug;
 use rand::seq::IteratorRandom;
 
 use regex::Regex;
@@ -71,7 +70,7 @@ pub trait WordList: Clone + std::fmt::Debug + Default + Sync {
     fn raw_wordlist(&self) -> String {
         let mut buf = String::new();
         for w in self.wordmap().keys() {
-            buf += &w;
+            buf += w;
             buf += "\n";
         }
         buf

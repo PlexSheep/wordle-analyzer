@@ -51,5 +51,5 @@ pub enum GameError {
 #[derive(Debug, Clone, Error)]
 pub enum BenchError {
     #[error("Trying to modify a finished report")]
-    ModifyFinishedReport
+    ModifyFinishedReport,
 }

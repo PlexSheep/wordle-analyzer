@@ -1,12 +1,7 @@
-use chrono::{self, Duration, NaiveDateTime, NaiveTime, TimeDelta};
-use core::panic;
+use chrono::{self, NaiveDateTime, TimeDelta};
 use libpt::log::debug;
-use std::fmt::Display;
-use std::ops::Div;
 use rayon::prelude::*;
-
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 use crate::game::response::GuessResponse;
 use crate::game::Game;
