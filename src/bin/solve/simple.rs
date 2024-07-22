@@ -2,8 +2,13 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
+use libpt::cli::{
+    repl::{DefaultRepl, Repl},
+    strum,
+};
 use libpt::log::*;
+use strum::IntoEnumIterator;
 
 use wordle_analyzer::game::response::GuessResponse;
 
@@ -25,8 +30,8 @@ struct Cli {
     #[arg(short, long, default_value_t = wordle_analyzer::DEFAULT_MAX_STEPS)]
     max_steps: usize,
     /// more verbose logs
-    #[arg(short, long)]
-    verbose: bool,
+    #[command(flatten)]
+    verbose: libpt::cli::args::VerbosityLevel,
     /// which solver to use
     #[arg(short, long, default_value_t = BuiltinSolverNames::default())]
     solver: BuiltinSolverNames,
@@ -34,12 +39,13 @@ struct Cli {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    if cli.verbose {
-        Logger::builder().set_level(Level::DEBUG).build().unwrap();
-    } else {
-        Logger::builder().set_level(Level::INFO).build().unwrap();
-    }
-    debug!("dumping CLI: {:#?}", cli);
+    Logger::builder()
+        .set_level(cli.verbose.level())
+        .build()
+        .unwrap();
+    trace!("dumping CLI: {:#?}", cli);
+
+    // let repl = libpt::cli::repl::DefaultRepl::<ReplCommand>::default();
 
     let wl = BuiltinWList::default();
     let builder = game::Game::builder(&wl)
