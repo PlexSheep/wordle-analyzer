@@ -44,21 +44,31 @@ struct Cli {
 enum ReplCommand {
     /// Let the user input the response to the last guess
     ///
-    /// Format:
+    Response { encoded: String },
+    /// Let the user input a word and the response for that word
+    ///
+    /// Evaluation Format:
     ///
     /// 'x' means wrong character
     ///
     /// 'p' means present character
     ///
     /// 'c' means correct character
-    Response { encoded: String },
-    /// Let the user input a word and the response for that word
+    ///
+    /// Example:
+    ///
+    /// 'xxxcc' means the first 3 chars are wrong but the second 2 chars are correct
+    ///
+    /// 'xppxc' means the first character is wrong, the next two characters are present, the last
+    /// is correct
     Guess {
         your_guess: String,
         evalutation: Evaluation,
     },
     /// Let the solver make a guess
     Solve,
+    /// Show the current state of the game
+    Show,
     /// Leave the Repl
     Exit,
 }
@@ -114,11 +124,24 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
         // only None if the repl has not stepped yet
         match repl.command().to_owned().unwrap() {
             ReplCommand::Exit => break,
+            ReplCommand::Show => {
+                println!("{}", game);
+            }
+            ReplCommand::Solve => {
+                let best_guess = solver.guess_for(&game);
+                println!("best guess: {best_guess}");
+            }
             ReplCommand::Guess {
                 your_guess,
                 evalutation,
             } => {
-                println!("{}", game.guess(your_guess, Some(evalutation))?)
+                let guess = game.guess(your_guess, Some(evalutation));
+                if guess.is_err() {
+                    eprintln!("{}", style(guess.unwrap_err()).red().bold());
+                    continue;
+                }
+                println!("{}", guess.unwrap());
+                debug!("current gamestate: {game:#?}");
             }
             _ => todo!(),
         }

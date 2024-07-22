@@ -1,9 +1,11 @@
 use core::panic;
+use std::fmt::Display;
 
 use crate::error::*;
 use crate::wlist::word::{ManyWordsRef, Word, WordData};
 use crate::wlist::WordList;
 
+use libpt::cli::console::StyledObject;
 use libpt::log::{debug, trace};
 
 pub mod response;
@@ -13,6 +15,7 @@ pub mod evaluation;
 
 pub mod summary;
 
+use self::evaluation::Evaluation;
 use self::response::Status;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -269,5 +272,30 @@ impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
     pub fn wordlist(mut self, wl: &'wl WL) -> Self {
         self.wordlist = wl;
         self
+    }
+}
+
+impl<'wl, WL: WordList> Display for Game<'wl, WL> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO: make this actually useful
+        // TODO: make this actually fancy
+        write!(
+            f,
+            "turn:\t\t{}\nsolution:\t{:?}\nguesses:\t",
+            self.step(),
+            self.solution(),
+        )?;
+        for s in self
+            .responses()
+            .iter()
+            .map(|v| v.evaluation().to_owned().colorized_display(v.guess()))
+        {
+            write!(f, "\"")?;
+            for si in s {
+                write!(f, "{si}")?;
+            }
+            write!(f, "\", ")?;
+        }
+        Ok(())
     }
 }
