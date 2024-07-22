@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
+use libpt::log::debug;
 use rayon::prelude::*;
 
 use crate::error::WResult;
@@ -46,6 +47,7 @@ where
     // NOTE: This is blocking, use start to let it run in another thread
     // FIXME: this never stops? Reports just keep getting printed
     fn bench(
+        &self,
         n: usize,
         report: Arc<RwLock<Report>>,
         solver: SL,
@@ -60,9 +62,10 @@ where
                     .expect("error playing the game during benchmark");
                 report.write().expect("lock is poisoned").add(r);
             });
-
+        libpt::log::info!("finished playing games, finalizing report");
         report.write().expect("lock is poisoned").finalize();
-
+        debug!("finalized the report");
+        self.set_finished(true)?;
         Ok(report.read().expect("lock is poisoned").clone())
     }
     // PERF: Somehow returning &Report would be better as we don't need to clone then
@@ -70,4 +73,5 @@ where
     fn report_shared(&'wl self) -> Arc<RwLock<Report>>;
     fn start(&'wl self, n: usize, builder: &'wl GameBuilder<'wl, WL>) -> WResult<()>;
     fn is_finished(&self) -> bool;
+    fn set_finished(&self, value: bool) -> WResult<()>;
 }

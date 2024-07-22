@@ -2,7 +2,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread::JoinHandle;
 
-use libpt::log::info;
+use libpt::log::{debug, info};
 
 use crate::error::WResult;
 use crate::game::{self, GameBuilder};
@@ -76,7 +76,13 @@ where
         let report = self.report_shared();
         let solver = self.solver();
         // TODO: make this run in another thread somehow
-        Self::bench(n, report, solver, &builder)?;
+        self.bench(n, report, solver, builder)?;
+        debug!("finisihed the benchmark");
+        Ok(())
+    }
+    fn set_finished(&self, value: bool) -> WResult<()> {
+        self.finished
+            .store(value, std::sync::atomic::Ordering::Relaxed);
         Ok(())
     }
 }
