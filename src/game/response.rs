@@ -3,9 +3,7 @@ use crate::wlist::WordList;
 use colored::Colorize;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::convert::Infallible;
 use std::fmt::Display;
-use std::str::FromStr;
 
 use super::{Evaluation, Game};
 
@@ -49,7 +47,7 @@ impl From<char> for Status {
 
 impl GuessResponse {
     pub(crate) fn new<WL: WordList>(guess: &Word, status: Evaluation, game: &Game<WL>) -> Self {
-        let mut new = Self {
+        let new = Self {
             guess: guess.to_owned(),
             evaluation: status,
             solution: game.solution().cloned(),

@@ -11,7 +11,6 @@ use crate::{
 
 #[cfg(feature = "builtin")]
 pub mod naive;
-use libpt::log::debug;
 #[cfg(feature = "builtin")]
 pub use naive::NaiveSolver;
 #[cfg(feature = "builtin")]
