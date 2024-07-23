@@ -1,6 +1,6 @@
 use libpt::log::{info, trace};
 
-use crate::error::{Error, SolverError, WResult};
+use crate::error::{SolverError, WResult};
 use crate::wlist::word::{ManyWordDatas, Word};
 use crate::wlist::WordList;
 

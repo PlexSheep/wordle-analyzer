@@ -1,5 +1,4 @@
 use std::convert::Infallible;
-use std::fmt::Display;
 use std::str::FromStr;
 
 use libpt::cli::console::{style, StyledObject};

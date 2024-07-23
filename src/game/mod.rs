@@ -5,7 +5,6 @@ use crate::error::*;
 use crate::wlist::word::{ManyWordsRef, Word, WordData};
 use crate::wlist::WordList;
 
-use libpt::cli::console::StyledObject;
 use libpt::log::{debug, trace};
 
 pub mod response;
