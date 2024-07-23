@@ -1,7 +1,7 @@
 use libpt::log::{info, trace};
 
-use crate::error::{Error, SolverError, WResult};
-use crate::wlist::word::{ManyWordDatas, Word};
+use crate::error::{SolverError, WResult};
+use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
 use super::{AnyBuiltinSolver, Solver, Status};
@@ -37,7 +37,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             }
         }
         trace!("other chars: {:?}", other_chars);
-        let matches: ManyWordDatas = game
+        let matches: Vec<WordData> = game
             .wordlist()
             .get_words_matching(pattern)
             .expect("the solution does not exist in the wordlist")

@@ -2,10 +2,9 @@ use core::panic;
 use std::fmt::Display;
 
 use crate::error::*;
-use crate::wlist::word::{ManyWordsRef, Word, WordData};
+use crate::wlist::word::{Word, WordData, WordDataRef};
 use crate::wlist::WordList;
 
-use libpt::cli::console::StyledObject;
 use libpt::log::{debug, trace};
 
 pub mod response;
@@ -174,7 +173,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         self.wordlist
     }
 
-    pub(crate) fn made_guesses(&self) -> ManyWordsRef {
+    pub(crate) fn made_guesses(&self) -> Vec<&Word> {
         self.responses.iter().map(|r| r.guess()).collect()
     }
 }

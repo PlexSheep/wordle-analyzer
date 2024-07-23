@@ -16,7 +16,7 @@ use crate::error::WResult;
 pub type AnyWordlist = Box<dyn WordList>;
 
 pub trait WordList: Clone + std::fmt::Debug + Default + Sync + Display {
-    fn solutions(&self) -> ManyWordDatas {
+    fn solutions(&self) -> Vec<WordData> {
         let wmap = self.wordmap().clone();
         let threshold = wmap.threshold();
         wmap.iter()
@@ -88,11 +88,11 @@ pub trait WordList: Clone + std::fmt::Debug + Default + Sync + Display {
         }
         buf
     }
-    fn get_words_matching(&self, pattern: String) -> WResult<ManyWordDatas> {
+    fn get_words_matching(&self, pattern: String) -> WResult<Vec<WordData>> {
         let pattern = Regex::new(&pattern)?;
         let hay = self.raw_wordlist();
         let keys = pattern.captures_iter(&hay);
-        let mut buf = ManyWordDatas::new();
+        let mut buf = Vec::new();
         for k in keys {
             let w: WordData = self.wordmap().get(&k[0]).unwrap();
             buf.push(w)
