@@ -29,7 +29,6 @@ where
     step: usize,
     solution: Option<WordData>,
     wordlist: &'wl WL,
-    finished: bool,
     responses: Vec<GuessResponse>,
     // TODO: keep track of the letters the user has tried
 }
@@ -50,8 +49,8 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     ///
     /// # Errors
     ///
-    /// This function will return an error if .
-    pub(crate) fn build(
+    /// No Errors
+    pub fn build(
         length: usize,
         precompute: bool,
         max_steps: usize,
@@ -70,11 +69,15 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
                 None
             },
             wordlist: wlist,
-            finished: false,
             responses: Vec::new(),
         };
 
         Ok(game)
+    }
+
+    /// set a solution, can be used for testing
+    pub fn set_solution(&mut self, sol: Option<WordData>) {
+        self.solution = sol;
     }
 
     /// Make a new guess
@@ -93,7 +96,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         if guess.len() != self.length {
             return Err(GameError::GuessHasWrongLength(guess.len()));
         }
-        if self.finished || self.step > self.max_steps {
+        if self.finished() || self.step > self.max_steps {
             return Err(GameError::TryingToPlayAFinishedGame);
         }
         if self.wordlist.get_word(&guess).is_none() {
@@ -110,7 +113,6 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             panic!("there is neither an evaluation nor a predefined solution for this guess");
         }
         self.responses.push(response.clone());
-        self.finished = response.finished();
         Ok(response)
     }
 
@@ -145,7 +147,17 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     }
 
     pub fn finished(&self) -> bool {
-        self.finished
+        if self.responses().is_empty() {
+            return false;
+        }
+        self.responses().last().unwrap().finished()
+    }
+
+    pub fn won(&self) -> bool {
+        if self.responses().is_empty() {
+            return false;
+        }
+        self.responses().last().unwrap().won()
     }
 
     pub fn max_steps(&self) -> usize {
@@ -182,7 +194,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 /// # use anyhow::Result;
 /// # fn main() -> Result<()> {
 /// let wl = BuiltinWList::default();
-/// let game: Game<_> = GameBuilder::new(&wl)
+/// let game: Game<_> = GameBuilder::new(&wl, true)
 ///     .build()?;
 /// # Ok(())
 /// # }
