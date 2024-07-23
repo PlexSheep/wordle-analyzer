@@ -2,7 +2,7 @@ use core::panic;
 use std::fmt::Display;
 
 use crate::error::*;
-use crate::wlist::word::{Word, WordData, WordDataRef};
+use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
 use libpt::log::{debug, trace};
