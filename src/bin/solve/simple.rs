@@ -14,6 +14,7 @@ use wordle_analyzer::game::response::GuessResponse;
 use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 use wordle_analyzer::wlist::word::Word;
+use wordle_analyzer::wlist::WordList;
 use wordle_analyzer::{self, game};
 
 #[derive(Parser, Clone, Debug)]
@@ -69,8 +70,22 @@ enum ReplCommand {
     Solve,
     /// Show the current state of the game
     Show,
+    /// Display data about the wordlist
+    Wl {
+        #[command(subcommand)]
+        cmd: WlCommand,
+    },
     /// Leave the Repl
     Exit,
+}
+
+#[derive(Subcommand, Debug, EnumIter, Clone, Default)]
+enum WlCommand {
+    #[default]
+    Stats,
+    Top {
+        amount: usize,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -124,6 +139,7 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
         // only None if the repl has not stepped yet
         match repl.command().to_owned().unwrap() {
             ReplCommand::Exit => break,
+            ReplCommand::Wl { cmd } => wlcommand_handler(&cli, &cmd, &wl)?,
             ReplCommand::Show => {
                 println!("{}", game);
             }
@@ -146,6 +162,21 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
                 debug!("game state: {game:#?}");
             }
             _ => todo!(),
+        }
+    }
+    Ok(())
+}
+
+fn wlcommand_handler(cli: &Cli, cmd: &WlCommand, wl: &impl WordList) -> anyhow::Result<()> {
+    match cmd {
+        WlCommand::Stats => {
+            println!("{wl}")
+        }
+        WlCommand::Top { amount } => {
+            println!();
+            for s in wl.n_most_likely(*amount).iter() {
+                println!("\t\"{}\":\t{:.08}%", s.0, s.1 * 100.0);
+            }
         }
     }
     Ok(())

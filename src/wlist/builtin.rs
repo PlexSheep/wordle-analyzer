@@ -1,4 +1,4 @@
-use std::fmt::{write, Debug};
+use std::fmt::{write, Debug, Display};
 
 use serde_json;
 
@@ -52,5 +52,11 @@ impl Debug for BuiltinWList {
                 self.over_threashold()
             ),
         )
+    }
+}
+
+impl Display for BuiltinWList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:#?}")
     }
 }

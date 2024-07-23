@@ -10,6 +10,7 @@ pub type Frequency = f64;
 // PERF: Hash for String is probably a bottleneck
 pub type Word = String;
 pub type WordData = (Word, Frequency);
+pub type WordDataRef<'wl> = (&'wl Word, &'wl Frequency);
 pub type ManyWordsRef<'a> = Vec<&'a Word>;
 pub type ManyWordDatas = Vec<(Word, Frequency)>;
 
