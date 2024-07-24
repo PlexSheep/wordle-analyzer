@@ -46,6 +46,12 @@ impl From<Vec<EvaluationUnit>> for Evaluation {
     }
 }
 
+impl From<&str> for Evaluation {
+    fn from(value: &str) -> Self {
+        Self::from_str(value).unwrap()
+    }
+}
+
 impl FromStr for Evaluation {
     type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
