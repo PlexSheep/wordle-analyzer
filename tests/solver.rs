@@ -11,9 +11,9 @@ fn wordlist() -> impl WordList {
 #[test]
 fn test_build_builtin_solvers() {
     let wl = wordlist();
-    let stupid_solver =
+    let _stupid_solver =
         AnyBuiltinSolver::Stupid(StupidSolver::build(&wl).expect("could not build naive solver"));
-    let naive_solver =
+    let _naive_solver =
         AnyBuiltinSolver::Naive(NaiveSolver::build(&wl).expect("could not build naive solver"));
 }
 
