@@ -2,7 +2,7 @@
 // #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 
-use std::thread::sleep_ms;
+use std::thread::sleep;
 
 use clap::Parser;
 use libpt::log::*;
@@ -10,7 +10,7 @@ use libpt::log::*;
 use wordle_analyzer::bench::builtin::BuiltinBenchmark;
 use wordle_analyzer::bench::{Benchmark, DEFAULT_N};
 use wordle_analyzer::game::GameBuilder;
-use wordle_analyzer::solve::{AnyBuiltinSolver, BuiltinSolverNames, Solver};
+use wordle_analyzer::solve::{AnyBuiltinSolver, BuiltinSolverNames};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
 
 use wordle_analyzer::{self, game};
@@ -64,7 +64,7 @@ fn main() -> anyhow::Result<()> {
     bench.start(50, &bench.builder())?;
 
     loop {
-        sleep_ms(1000);
+        sleep(std::time::Duration::from_secs(1));
         println!("{}", bench.report());
         if bench.is_finished() {
             break;

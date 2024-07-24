@@ -6,7 +6,7 @@ use clap::{Parser, Subcommand};
 use libpt::cli::console::style;
 use libpt::cli::{repl::Repl, strum};
 use libpt::log::*;
-use strum::{EnumIter, IntoEnumIterator};
+use strum::EnumIter;
 
 use wordle_analyzer::game::evaluation::Evaluation;
 use wordle_analyzer::game::response::GuessResponse;
@@ -167,7 +167,7 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn wlcommand_handler(cli: &Cli, cmd: &WlCommand, wl: &impl WordList) -> anyhow::Result<()> {
+fn wlcommand_handler(_cli: &Cli, cmd: &WlCommand, wl: &impl WordList) -> anyhow::Result<()> {
     match cmd {
         WlCommand::Stats => {
             println!("{wl}")
