@@ -21,6 +21,10 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
         let mut pattern: String = String::from(".....");
         let mut other_chars: Vec<char> = Vec::new();
         let response = game.last_response();
+        trace!(
+            "guessing best guess for last response: {response:#?}\n{:#?}",
+            response.map(|a| a.evaluation())
+        );
         if response.is_some() {
             for (idx, p) in response
                 .unwrap()
@@ -37,10 +41,11 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             }
         }
         trace!("other chars: {:?}", other_chars);
-        let matches: Vec<WordData> = game
-            .wordlist()
-            .get_words_matching(pattern)
-            .expect("the solution does not exist in the wordlist")
+        let mut matches: Vec<WordData> = game.wordlist().get_words_matching(pattern)?;
+        if matches.is_empty() {
+            return Err(SolverError::NoMatches.into());
+        }
+        matches = matches
             .iter()
             // only words that have not been guessed yet
             .filter(|p| !game.made_guesses().contains(&&p.0))

@@ -49,7 +49,7 @@ pub enum GameError {
     GuessHasWrongLength(usize),
     #[error("The game is finished but a guess is being made")]
     TryingToPlayAFinishedGame,
-    #[error("Tried to guess a word that is not in the wordlist ({0})")]
+    #[error("Tried to guess or use a word that is not in the wordlist ({0})")]
     WordNotInWordlist(Word),
 }
 

@@ -8,12 +8,13 @@ use libpt::cli::{repl::Repl, strum};
 use libpt::log::*;
 use strum::EnumIter;
 
+use wordle_analyzer::error::Error;
 use wordle_analyzer::game::evaluation::Evaluation;
 use wordle_analyzer::game::response::GuessResponse;
 
 use wordle_analyzer::solve::{BuiltinSolverNames, Solver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
-use wordle_analyzer::wlist::word::Word;
+use wordle_analyzer::wlist::word::{Word, WordData};
 use wordle_analyzer::wlist::WordList;
 use wordle_analyzer::{self, game};
 
@@ -33,12 +34,22 @@ struct Cli {
     #[command(flatten)]
     verbose: libpt::cli::args::VerbosityLevel,
     /// which solver to use
-    #[arg(short, long, default_value_t = BuiltinSolverNames::default())]
+    #[arg(long, default_value_t = BuiltinSolverNames::default())]
     solver: BuiltinSolverNames,
 
     /// set if the solver should play a full native game without interaction
     #[arg(short, long)]
     non_interactive: bool,
+
+    // FIXME: line breaks don't work correctly in the cli help
+    //
+    /// Solution for the game
+    ///
+    /// This will only be used when non-interactive is used. You can use this option to see how the
+    /// selected solver behaves when trying to guess a specific solution, which can help reproduce
+    /// behavior.
+    #[arg(short, long)]
+    solution: Option<Word>,
 }
 
 #[derive(Subcommand, Debug, EnumIter, Clone)]
@@ -184,10 +195,22 @@ fn wlcommand_handler(_cli: &Cli, cmd: &WlCommand, wl: &impl WordList) -> anyhow:
 
 fn play_native_non_interactive(cli: Cli) -> anyhow::Result<()> {
     let wl = BuiltinWList::default();
-    let builder = game::Game::builder(&wl)
+    let mut builder = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)
         .precompute(cli.precompute);
+    if cli.solution.is_some() {
+        let solw: Word = cli.solution.unwrap();
+        let sol = wl.get_word(&solw);
+        if sol.is_none() {
+            eprintln!("the requested solution \"{solw}\" is not in the wordlist");
+            return Err(Error::GameError {
+                source: wordle_analyzer::error::GameError::WordNotInWordlist(solw),
+            }
+            .into());
+        }
+        builder = builder.solution(sol);
+    }
     let solver = cli.solver.to_solver(&wl);
     let mut game = builder.build()?;
 
