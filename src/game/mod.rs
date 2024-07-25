@@ -133,6 +133,13 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         evaluation.into()
     }
 
+    /// discard the last n responses
+    pub fn undo(&mut self, n: usize) -> WResult<()> {
+        self.responses
+            .drain(self.responses.len() - n..self.responses.len());
+        Ok(())
+    }
+
     pub fn length(&self) -> usize {
         self.length
     }

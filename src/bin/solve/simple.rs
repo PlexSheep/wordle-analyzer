@@ -54,9 +54,6 @@ struct Cli {
 
 #[derive(Subcommand, Debug, EnumIter, Clone)]
 enum ReplCommand {
-    /// Let the user input the response to the last guess
-    ///
-    Response { encoded: String },
     /// Let the user input a word and the response for that word
     ///
     /// Evaluation Format:
@@ -86,6 +83,10 @@ enum ReplCommand {
         #[command(subcommand)]
         cmd: WlCommand,
     },
+    /// Start a new game
+    New,
+    /// Undo the last n operations
+    Undo { n: usize },
     /// Leave the Repl
     Exit,
 }
@@ -155,9 +156,13 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
                 println!("{}", game);
             }
             ReplCommand::Solve => {
-                let best_guess = solver.guess_for(&game)?;
+                let best_guess = solver.guess_for(&game);
+                if best_guess.is_err() {
+                    eprintln!("{}", style(best_guess.unwrap_err()).red().bold());
+                    continue;
+                }
                 debug!("game state: {game:?}");
-                println!("best guess: {best_guess}");
+                println!("best guess: {}", best_guess.unwrap());
             }
             ReplCommand::Guess {
                 your_guess,
@@ -174,7 +179,8 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
                 println!("{}", guess.unwrap());
                 debug!("game state: {game:#?}");
             }
-            _ => todo!(),
+            ReplCommand::New => game = builder.build()?,
+            ReplCommand::Undo { n } => game.undo(n)?,
         }
     }
     Ok(())
