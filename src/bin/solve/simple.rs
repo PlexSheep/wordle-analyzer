@@ -50,6 +50,13 @@ struct Cli {
     /// behavior.
     #[arg(short, long)]
     solution: Option<Word>,
+
+    /// select a wordlist
+    ///
+    /// 'ger' and 'eng' are special values bundled with this executable, if the value does not
+    /// match either of those, it will be assumed to be a file path.
+    #[arg(short, long, default_value_t = String::from("eng"))]
+    wordlist: String,
 }
 
 #[derive(Subcommand, Debug, EnumIter, Clone)]
@@ -116,7 +123,11 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
-    let wl = BuiltinWList::default();
+    let wl = match cli.wordlist.as_str() {
+        "ger" => BuiltinWList::german(cli.length),
+        "eng" => BuiltinWList::english(cli.length),
+        _ => BuiltinWList::load(&cli.wordlist, cli.length)?,
+    };
     let builder = game::GameBuilder::new(&wl, false)
         .length(cli.length)
         .max_steps(cli.max_steps)
@@ -202,7 +213,12 @@ fn wlcommand_handler(_cli: &Cli, cmd: &WlCommand, wl: &impl WordList) -> anyhow:
 }
 
 fn play_native_non_interactive(cli: Cli) -> anyhow::Result<()> {
-    let wl = BuiltinWList::default();
+    let wl = match cli.wordlist.as_str() {
+        "ger" => BuiltinWList::german(cli.length),
+        "eng" => BuiltinWList::english(cli.length),
+        _ => BuiltinWList::load(&cli.wordlist, cli.length)?,
+    };
+    debug!("wordlist: {wl}");
     let mut builder = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)

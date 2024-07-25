@@ -27,6 +27,12 @@ struct Cli {
     /// more verbose logs
     #[arg(short, long)]
     verbose: bool,
+    /// select a wordlist
+    ///
+    /// 'ger' and 'eng' are special values bundled with this executable, if the value does not
+    /// match either of those, it will be assumed to be a file path.
+    #[arg(short, long, default_value_t = String::from("eng"))]
+    wordlist: String,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -38,7 +44,11 @@ fn main() -> anyhow::Result<()> {
     }
     debug!("dumping CLI: {:#?}", cli);
 
-    let wl = BuiltinWList::default();
+    let wl = match cli.wordlist.as_str() {
+        "ger" => BuiltinWList::german(cli.length),
+        "eng" => BuiltinWList::english(cli.length),
+        _ => BuiltinWList::load(&cli.wordlist, cli.length)?,
+    };
     let builder = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)
