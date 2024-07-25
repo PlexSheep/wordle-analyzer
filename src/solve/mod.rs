@@ -1,7 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 use crate::{
-    error::{Error, SolverError, WResult},
+    error::{SolverError, WResult},
     game::{response::*, Game},
     wlist::{
         word::{Word, WordData},
