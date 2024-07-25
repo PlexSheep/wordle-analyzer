@@ -1,5 +1,8 @@
+use core::panic;
+use std::fmt::Display;
+
 use crate::error::*;
-use crate::wlist::word::{ManyWordsRef, Word, WordData};
+use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
 use libpt::log::{debug, trace};
@@ -7,8 +10,11 @@ use libpt::log::{debug, trace};
 pub mod response;
 use response::GuessResponse;
 
+pub mod evaluation;
+
 pub mod summary;
 
+use self::evaluation::Evaluation;
 use self::response::Status;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -20,9 +26,8 @@ where
     precompute: bool,
     max_steps: usize,
     step: usize,
-    solution: WordData,
+    solution: Option<WordData>,
     wordlist: &'wl WL,
-    finished: bool,
     responses: Vec<GuessResponse>,
     // TODO: keep track of the letters the user has tried
 }
@@ -30,7 +35,7 @@ where
 impl<'wl, WL: WordList> Game<'wl, WL> {
     /// get a new [`GameBuilder`]
     pub fn builder(wl: &'wl WL) -> GameBuilder<'wl, WL> {
-        GameBuilder::new(wl)
+        GameBuilder::new(wl, true)
     }
     /// Create a [Game] of wordle
     ///
@@ -43,27 +48,35 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     ///
     /// # Errors
     ///
-    /// This function will return an error if .
-    pub(crate) fn build(
+    /// No Errors
+    pub fn build(
         length: usize,
         precompute: bool,
         max_steps: usize,
         wlist: &'wl WL,
+        generate_solution: bool,
     ) -> GameResult<Self> {
         // TODO: check if the length is in the range bounds of the wordlist
-        let solution = wlist.rand_solution();
         let game: Game<'wl, WL> = Game {
             length,
             precompute,
             max_steps,
             step: 0,
-            solution,
+            solution: if generate_solution {
+                Some(wlist.rand_solution())
+            } else {
+                None
+            },
             wordlist: wlist,
-            finished: false,
             responses: Vec::new(),
         };
 
         Ok(game)
+    }
+
+    /// set a solution, can be used for testing
+    pub fn set_solution(&mut self, sol: Option<WordData>) {
+        self.solution = sol;
     }
 
     /// Make a new guess
@@ -72,15 +85,17 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     /// A [GuessResponse] will be formulated, showing us which letters are correctly placed, in the
     /// solution, or just wrong.
     ///
+    /// Note that you do not need to use the [GuessResponse], it is appended to the game state.
+    ///
     /// # Errors
     ///
     /// This function will return an error if the length of the [Word] is wrong It will also error
     /// if the game is finished.
-    pub fn guess(&mut self, guess: Word) -> GameResult<GuessResponse> {
+    pub fn guess(&mut self, guess: Word, eval: Option<Evaluation>) -> GameResult<GuessResponse> {
         if guess.len() != self.length {
             return Err(GameError::GuessHasWrongLength(guess.len()));
         }
-        if self.finished || self.step > self.max_steps {
+        if self.finished() || self.step > self.max_steps {
             return Err(GameError::TryingToPlayAFinishedGame);
         }
         if self.wordlist.get_word(&guess).is_none() {
@@ -88,34 +103,49 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         }
         self.step += 1;
 
-        let mut compare_solution = self.solution.0.clone();
+        let response;
+        if eval.is_some() && self.solution.is_none() {
+            response = GuessResponse::new(&guess, eval.unwrap(), self);
+        } else if let Some(solution) = self.solution.clone() {
+            response = GuessResponse::new(&guess, Self::evaluate(solution, &guess), self);
+        } else {
+            panic!("there is neither an evaluation nor a predefined solution for this guess");
+        }
+        self.responses.push(response.clone());
+        Ok(response)
+    }
+
+    pub fn evaluate(mut solution: WordData, guess: &Word) -> Evaluation {
         let mut evaluation = Vec::new();
         let mut status: Status;
         for (idx, c) in guess.chars().enumerate() {
-            if compare_solution.chars().nth(idx) == Some(c) {
+            if solution.0.chars().nth(idx) == Some(c) {
                 status = Status::Matched;
-                compare_solution.replace_range(idx..idx + 1, "_");
-            } else if compare_solution.contains(c) {
+                solution.0.replace_range(idx..idx + 1, "_");
+            } else if solution.0.contains(c) {
                 status = Status::Exists;
-                compare_solution = compare_solution.replacen(c, "_", 1);
+                solution.0 = solution.0.replacen(c, "_", 1);
             } else {
                 status = Status::None
             }
             evaluation.push((c, status));
         }
+        evaluation.into()
+    }
 
-        let response = GuessResponse::new(guess, evaluation, self);
-        self.responses.push(response.clone());
-        self.finished = response.finished();
-        Ok(response)
+    /// discard the last n responses
+    pub fn undo(&mut self, n: usize) -> WResult<()> {
+        self.responses
+            .drain(self.responses.len() - n..self.responses.len());
+        Ok(())
     }
 
     pub fn length(&self) -> usize {
         self.length
     }
 
-    pub fn solution(&self) -> &WordData {
-        &self.solution
+    pub fn solution(&self) -> Option<&WordData> {
+        self.solution.as_ref()
     }
 
     pub fn step(&self) -> usize {
@@ -123,7 +153,17 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     }
 
     pub fn finished(&self) -> bool {
-        self.finished
+        if self.responses().is_empty() {
+            return false;
+        }
+        self.responses().last().unwrap().finished()
+    }
+
+    pub fn won(&self) -> bool {
+        if self.responses().is_empty() {
+            return false;
+        }
+        self.responses().last().unwrap().won()
     }
 
     pub fn max_steps(&self) -> usize {
@@ -140,7 +180,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         self.wordlist
     }
 
-    pub(crate) fn made_guesses(&self) -> ManyWordsRef {
+    pub(crate) fn made_guesses(&self) -> Vec<&Word> {
         self.responses.iter().map(|r| r.guess()).collect()
     }
 }
@@ -160,7 +200,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 /// # use anyhow::Result;
 /// # fn main() -> Result<()> {
 /// let wl = BuiltinWList::default();
-/// let game: Game<_> = GameBuilder::new(&wl)
+/// let game: Game<_> = GameBuilder::new(&wl, true)
 ///     .build()?;
 /// # Ok(())
 /// # }
@@ -181,32 +221,44 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 /// # }
 /// ```
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GameBuilder<'wl, WL: WordList> {
     length: usize,
     precompute: bool,
     max_steps: usize,
     wordlist: &'wl WL,
+    generate_solution: bool,
+    solution: Option<WordData>,
 }
 
 impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
     /// make a new [GameBuilder]
     ///
     /// We need a [WordList], so provide one here.
-    pub fn new(wl: &'wl WL) -> Self {
+    pub fn new(wl: &'wl WL, generate_solution: bool) -> Self {
         Self {
             length: super::DEFAULT_WORD_LENGTH,
             precompute: false,
             max_steps: super::DEFAULT_MAX_STEPS,
             wordlist: wl,
+            generate_solution,
+            solution: None,
         }
     }
 
     /// build a [`Game`] with the stored configuration
     pub fn build(&'wl self) -> GameResult<Game<'wl, WL>> {
         trace!("{:#?}", self);
-        let game: Game<WL> =
-            Game::build(self.length, self.precompute, self.max_steps, self.wordlist)?;
+        let mut game: Game<WL> = Game::build(
+            self.length,
+            self.precompute,
+            self.max_steps,
+            self.wordlist,
+            self.generate_solution,
+        )?;
+        if self.solution.is_some() {
+            game.set_solution(self.solution.clone())
+        }
         Ok(game)
     }
 
@@ -243,5 +295,46 @@ impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
     pub fn wordlist(mut self, wl: &'wl WL) -> Self {
         self.wordlist = wl;
         self
+    }
+
+    /// Set the solution for the games built by the builder
+    ///
+    /// If this is [Some], then the solution generated by
+    /// [generate_solution](Self::generate_solution) will be overwritten (if it
+    /// is true).
+    ///
+    /// If [generate_solution](Self::generate_solution) is false and this method is not used, the
+    /// game will not have a predetermined solution and will not be able to generate evaluations
+    /// for guesses, so these will need to be added manually by the user. The intention is that
+    /// this can be used for use cases where the user plays wordle not within wordle-analyzer but
+    /// in another program (like their browser). It can also be used to test solvers.
+    pub fn solution(mut self, solution: Option<WordData>) -> Self {
+        self.solution = solution;
+        self
+    }
+}
+
+impl<'wl, WL: WordList> Display for Game<'wl, WL> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO: make this actually useful
+        // TODO: make this actually fancy
+        write!(
+            f,
+            "turn:\t\t{}\nsolution:\t{:?}\nguesses:\t",
+            self.step(),
+            self.solution(),
+        )?;
+        for s in self
+            .responses()
+            .iter()
+            .map(|v| v.evaluation().to_owned().colorized_display())
+        {
+            write!(f, "\"")?;
+            for si in s {
+                write!(f, "{si}")?;
+            }
+            write!(f, "\", ")?;
+        }
+        Ok(())
     }
 }

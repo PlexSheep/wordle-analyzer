@@ -10,8 +10,7 @@ pub type Frequency = f64;
 // PERF: Hash for String is probably a bottleneck
 pub type Word = String;
 pub type WordData = (Word, Frequency);
-pub type ManyWordsRef<'a> = Vec<&'a Word>;
-pub type ManyWordDatas = Vec<(Word, Frequency)>;
+pub type WordDataRef<'wl> = (&'wl Word, &'wl Frequency);
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

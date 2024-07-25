@@ -5,7 +5,7 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-use super::Game;
+use super::{Evaluation, Game};
 
 #[derive(Debug, Clone, PartialEq, Copy, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -13,15 +13,13 @@ pub struct AtomicEvaluation {
     char: char,
     status: Status,
 }
-pub type Evaluation = Vec<(char, Status)>;
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GuessResponse {
     guess: Word,
     evaluation: Evaluation,
-    finish: bool,
-    solution: WordData,
+    solution: Option<WordData>,
     step: usize,
     max_steps: usize,
 }
@@ -34,44 +32,48 @@ pub enum Status {
     Matched = 2,
 }
 
+impl From<char> for Status {
+    fn from(value: char) -> Self {
+        let value = value.to_ascii_lowercase(); // let's not deal with unicode here, wordle is
+                                                // ASCII centric anyway
+        match value {
+            'x' => Self::None,
+            'f' | 'e' => Self::Exists,
+            'c' | 'm' => Self::Matched,
+            _ => Self::None,
+        }
+    }
+}
+
 impl GuessResponse {
-    pub(crate) fn new<WL: WordList>(
-        guess: Word,
-        status: Vec<(char, Status)>,
-        game: &Game<WL>,
-    ) -> Self {
-        let finish: bool = if game.step() > game.max_steps() {
-            true
-        } else {
-            guess == game.solution().0
-        };
-        Self {
-            guess,
+    pub(crate) fn new<WL: WordList>(guess: &Word, status: Evaluation, game: &Game<WL>) -> Self {
+        let new = Self {
+            guess: guess.to_owned(),
             evaluation: status,
-            finish,
-            solution: game.solution().clone(),
+            solution: game.solution().cloned(),
             step: game.step(),
             max_steps: game.max_steps(),
-        }
+        };
+        new
     }
 
     pub fn finished(&self) -> bool {
-        self.finish
+        self.step() > self.max_steps() || self.won()
     }
 
     pub fn won(&self) -> bool {
-        self.guess == self.solution.0
+        let mut ok = true;
+        for i in self.evaluation.clone().into_iter() {
+            ok &= i.1 == Status::Matched
+        }
+        ok
     }
 
     pub fn solution(&self) -> Option<WordData> {
-        if self.won() {
-            Some(self.solution.clone())
-        } else {
-            None
-        }
+        self.solution.clone()
     }
 
-    pub fn evaluation(&self) -> &[(char, Status)] {
+    pub fn evaluation(&self) -> &Evaluation {
         &self.evaluation
     }
 
@@ -90,7 +92,7 @@ impl GuessResponse {
 
 impl Display for GuessResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for s in &self.evaluation {
+        for s in self.evaluation.clone().into_iter() {
             write!(
                 f,
                 "{}",

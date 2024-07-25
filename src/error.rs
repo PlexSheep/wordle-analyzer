@@ -13,6 +13,11 @@ pub enum Error {
         #[from]
         source: GameError,
     },
+    #[error("Solver Error")]
+    SolverError {
+        #[from]
+        source: SolverError,
+    },
     #[error("Benchmark Error")]
     BenchError {
         #[from]
@@ -44,12 +49,22 @@ pub enum GameError {
     GuessHasWrongLength(usize),
     #[error("The game is finished but a guess is being made")]
     TryingToPlayAFinishedGame,
-    #[error("Tried to guess a word that is not in the wordlist ({0})")]
+    #[error("Tried to guess or use a word that is not in the wordlist ({0})")]
     WordNotInWordlist(Word),
+    #[error("Invalid syntax for manual evaluation creation")]
+    InvalidEvaluationSyntax(String),
+    #[error("The length of guess and evaluation must be the same")]
+    GuessAndEvalNotSameLen((String, String)),
 }
 
 #[derive(Debug, Clone, Error)]
 pub enum BenchError {
     #[error("Trying to modify a finished report")]
     ModifyFinishedReport,
+}
+
+#[derive(Debug, Clone, Error)]
+pub enum SolverError {
+    #[error("Wordlist has no matches for the gamestate")]
+    NoMatches,
 }

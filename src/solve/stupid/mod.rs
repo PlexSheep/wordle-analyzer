@@ -1,5 +1,6 @@
 use libpt::log::info;
 
+use crate::error::WResult;
 use crate::wlist::word::Word;
 use crate::wlist::WordList;
 
@@ -15,8 +16,8 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for StupidSolver<'wl, WL> {
         info!("using stupid solver");
         Ok(Self { wl: wordlist })
     }
-    fn guess_for(&self, game: &crate::game::Game<WL>) -> Word {
-        self.wl.rand_word().0
+    fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
+        Ok(self.wl.rand_word().0)
     }
 }
 

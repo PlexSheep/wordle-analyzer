@@ -3,6 +3,7 @@ use rand::seq::IteratorRandom;
 use regex::Regex;
 
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::ops::RangeBounds;
 
 #[cfg(feature = "builtin")]
@@ -14,8 +15,8 @@ use crate::error::WResult;
 
 pub type AnyWordlist = Box<dyn WordList>;
 
-pub trait WordList: Clone + std::fmt::Debug + Default + Sync {
-    fn solutions(&self) -> ManyWordDatas {
+pub trait WordList: Clone + std::fmt::Debug + Default + Sync + Display {
+    fn solutions(&self) -> Vec<WordData> {
         let wmap = self.wordmap().clone();
         let threshold = wmap.threshold();
         wmap.iter()
@@ -40,6 +41,18 @@ pub trait WordList: Clone + std::fmt::Debug + Default + Sync {
     fn wordmap(&self) -> &WordMap;
     fn total_freq(&self) -> Frequency {
         self.wordmap().values().map(|a| a.to_owned()).sum()
+    }
+    fn sort_likelihood(&self) -> Vec<WordData> {
+        let wmap = self.wordmap();
+        let mut wpairs: Vec<(_, _)> = wmap.iter().collect();
+        wpairs.sort_by(|a, b| a.1.partial_cmp(b.1).unwrap().reverse());
+        wpairs
+            .iter()
+            .map(|v| (v.0.to_owned(), v.1.to_owned()))
+            .collect()
+    }
+    fn n_most_likely(&self, n: usize) -> Vec<WordData> {
+        self.sort_likelihood().into_iter().take(n).collect()
     }
     fn over_threashold(&self) -> WordMap {
         let wmap = self.wordmap();
@@ -75,11 +88,11 @@ pub trait WordList: Clone + std::fmt::Debug + Default + Sync {
         }
         buf
     }
-    fn get_words_matching(&self, pattern: String) -> WResult<ManyWordDatas> {
+    fn get_words_matching(&self, pattern: String) -> WResult<Vec<WordData>> {
         let pattern = Regex::new(&pattern)?;
         let hay = self.raw_wordlist();
         let keys = pattern.captures_iter(&hay);
-        let mut buf = ManyWordDatas::new();
+        let mut buf = Vec::new();
         for k in keys {
             let w: WordData = self.wordmap().get(&k[0]).unwrap();
             buf.push(w)

@@ -1,6 +1,7 @@
 use libpt::log::{info, trace};
 
-use crate::wlist::word::{ManyWordDatas, Word};
+use crate::error::{SolverError, WResult};
+use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
 use super::{AnyBuiltinSolver, Solver, Status};
@@ -15,13 +16,32 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
         info!("using naive solver");
         Ok(Self { wl: wordlist })
     }
-    fn guess_for(&self, game: &crate::game::Game<WL>) -> Word {
+    /// Guess a word from the wordlist for the given game
+    ///
+    /// ## Algorithm
+    ///
+    /// * Look at the evaluation for the last response and keep the correct letters
+    /// * Get all words that have these letters at the right position
+    /// * Discard words that have already been tried
+    /// * Discard all words that don't have the chars that we know from the last guess are in the
+    ///   word, but don't know the position of.
+    fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
         // HACK: hardcoded length
         let mut pattern: String = String::from(".....");
         let mut other_chars: Vec<char> = Vec::new();
         let response = game.last_response();
+        trace!(
+            "guessing best guess for last response: {response:#?}\n{:#?}",
+            response.map(|a| a.evaluation())
+        );
         if response.is_some() {
-            for (idx, p) in response.unwrap().evaluation().iter().enumerate() {
+            for (idx, p) in response
+                .unwrap()
+                .evaluation()
+                .clone()
+                .into_iter()
+                .enumerate()
+            {
                 if p.1 == Status::Matched {
                     pattern.replace_range(idx..idx + 1, &p.0.to_string());
                 } else if p.1 == Status::Exists {
@@ -30,10 +50,11 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             }
         }
         trace!("other chars: {:?}", other_chars);
-        let matches: ManyWordDatas = game
-            .wordlist()
-            .get_words_matching(pattern)
-            .expect("the solution does not exist in the wordlist")
+        let mut matches: Vec<WordData> = game.wordlist().get_words_matching(pattern)?;
+        if matches.is_empty() {
+            return Err(SolverError::NoMatches.into());
+        }
+        matches = matches
             .iter()
             // only words that have not been guessed yet
             .filter(|p| !game.made_guesses().contains(&&p.0))
@@ -48,7 +69,10 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             })
             .map(|v| v.to_owned())
             .collect();
-        matches[0].0.to_owned()
+        if matches.is_empty() {
+            return Err(SolverError::NoMatches.into());
+        }
+        Ok(matches[0].0.to_owned())
     }
 }
 

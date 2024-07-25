@@ -44,14 +44,14 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized + Sync {
     ///
     /// Each [Solver] needs to implement this method themselves, many other methods rely on this to
     /// play the [Game], such as [play](Solver::play) or [solve](Solver::solve).
-    fn guess_for(&self, game: &Game<'wl, WL>) -> Word;
+    fn guess_for(&self, game: &Game<'wl, WL>) -> WResult<Word>;
     /// Make a singular step for a [Game]
     ///
     /// # Errors
     ///
     /// This function will return an error if [guess_for](Solver::guess_for) fails.
     fn make_a_move(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
-        Ok(game.guess(self.guess_for(game))?)
+        Ok(game.guess(self.guess_for(game)?, None)?)
     }
     /// Play a [Game] and return the last [GuessResponse].
     ///
@@ -59,6 +59,7 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized + Sync {
     ///
     /// This function will return an error if [make_a_move](Solver::make_a_move) fails.
     fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
+        // TODO: check if the game is finished already and return an Err if so
         let mut resp: GuessResponse;
         loop {
             resp = self.make_a_move(game)?;
@@ -146,10 +147,10 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for AnyBuiltinSolver<'wl, WL> {
     fn build(wordlist: &'wl WL) -> WResult<Self> {
         Ok(Self::Naive(NaiveSolver::build(wordlist)?))
     }
-    fn guess_for(&self, game: &Game<'wl, WL>) -> Word {
-        match self {
-            Self::Naive(solver) => solver.guess_for(game),
-            Self::Stupid(solver) => solver.guess_for(game),
-        }
+    fn guess_for(&self, game: &Game<'wl, WL>) -> WResult<Word> {
+        Ok(match self {
+            Self::Naive(solver) => solver.guess_for(game)?,
+            Self::Stupid(solver) => solver.guess_for(game)?,
+        })
     }
 }
