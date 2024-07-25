@@ -1,11 +1,11 @@
-use std::fmt::{write, Debug, Display};
+use std::fmt::{Debug, Display};
 use std::path::Path;
 
 use serde_json;
 
 use crate::error::WordlistError;
 
-use super::{Word, WordList, WordMapInner};
+use super::{Word, WordList};
 
 pub const RAW_WORDLIST_BUNDLED_ENGLISH: &str =
     include_str!("../../data/wordlists/en_US_3b1b_freq_map.json");
