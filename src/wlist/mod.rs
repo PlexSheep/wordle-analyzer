@@ -11,7 +11,7 @@ pub mod builtin;
 pub mod word;
 use word::*;
 
-use crate::error::{Error, WResult, WordlistError};
+use crate::error::{WResult, WordlistError};
 
 pub type AnyWordlist = Box<dyn WordList>;
 
