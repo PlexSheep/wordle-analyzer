@@ -1,9 +1,9 @@
 use std::fmt::{write, Debug, Display};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use serde_json;
 
-use crate::error::{WResult, WordlistError};
+use crate::error::WordlistError;
 
 use super::{Word, WordList};
 
