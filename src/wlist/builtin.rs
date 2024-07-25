@@ -1,14 +1,64 @@
 use std::fmt::{write, Debug, Display};
+use std::path::{Path, PathBuf};
 
 use serde_json;
 
+use crate::error::{WResult, WordlistError};
+
 use super::{Word, WordList};
 
-const RAW_WORDLIST_FILE: &str = include_str!("../../data/wordlists/en_US_3b1b_freq_map.json");
+pub const RAW_WORDLIST_BUNDLED_ENGLISH: &str =
+    include_str!("../../data/wordlists/en_US_3b1b_freq_map.json");
+pub const RAW_WORDLIST_BUNDLED_GERMAN_SMALL: &str =
+    include_str!("../../data/wordlists/german_SUBTLEX-DE_small.json");
+pub const RAW_WORDLIST_PATH_ENGLISH: &str = "../../data/wordlists/en_US_3b1b_freq_map.json";
+pub const RAW_WORDLIST_PATH_GERMAN_FULL: &str = "../../data/wordlists/german_SUBTLEX-DE_full.json";
+pub const RAW_WORDLIST_PATH_GERMAN_SMALL: &str = "../../data/wordlists/german_SUBTLEX-DE_full.json";
 
 #[derive(Clone)]
 pub struct BuiltinWList {
     words: super::WordMap,
+}
+
+impl BuiltinWList {
+    /// load a wordlist from file
+    ///
+    /// Wordlist files are expected to have the following format:
+    ///
+    /// ```json
+    /// {
+    ///     "word": 0.001
+    /// }
+    /// ```
+    ///
+    /// Where the number is the frequency. Higher/Lower case is ignored.
+    ///
+    /// ## Errors
+    ///
+    /// Will fail if the file path cannot be read or the format is wrong.
+    pub fn load<P: AsRef<std::path::Path>>(wl_path: P) -> Result<Self, WordlistError> {
+        let path: &Path = wl_path.as_ref();
+        let file = std::fs::File::open(path)?;
+
+        // don't load the whole string into memory
+        let reader = std::io::BufReader::new(file);
+        let words: super::WordMap = serde_json::from_reader(reader)?;
+
+        Ok(Self { words })
+    }
+
+    pub fn english() -> Self {
+        let words: super::WordMap = serde_json::from_str(RAW_WORDLIST_BUNDLED_ENGLISH).unwrap();
+
+        Self { words }
+    }
+
+    pub fn german() -> Self {
+        let words: super::WordMap =
+            serde_json::from_str(RAW_WORDLIST_BUNDLED_GERMAN_SMALL).unwrap();
+
+        Self { words }
+    }
 }
 
 impl super::WordList for BuiltinWList {
@@ -25,9 +75,7 @@ impl super::WordList for BuiltinWList {
 
 impl Default for BuiltinWList {
     fn default() -> Self {
-        let words: super::WordMap = serde_json::from_str(RAW_WORDLIST_FILE).unwrap();
-
-        Self { words }
+        Self::english()
     }
 }
 

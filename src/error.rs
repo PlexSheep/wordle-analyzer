@@ -13,6 +13,11 @@ pub enum Error {
         #[from]
         source: GameError,
     },
+    #[error("Wordlist Error")]
+    WordlistError {
+        #[from]
+        source: WordlistError,
+    },
     #[error("Solver Error")]
     SolverError {
         #[from]
@@ -67,4 +72,18 @@ pub enum BenchError {
 pub enum SolverError {
     #[error("Wordlist has no matches for the gamestate")]
     NoMatches,
+}
+
+#[derive(Debug, Error)]
+pub enum WordlistError {
+    #[error("Wordlist has no matches for the gamestate")]
+    BadFormat {
+        #[from]
+        source: serde_json::Error,
+    },
+    #[error("I/O error (probably filesystem related)")]
+    IO {
+        #[from]
+        source: std::io::Error,
+    },
 }
