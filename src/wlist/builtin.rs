@@ -5,7 +5,7 @@ use serde_json;
 
 use crate::error::WordlistError;
 
-use super::{Word, WordList};
+use super::{Word, WordList, WordMapInner};
 
 pub const RAW_WORDLIST_BUNDLED_ENGLISH: &str =
     include_str!("../../data/wordlists/en_US_3b1b_freq_map.json");
@@ -18,6 +18,7 @@ pub const RAW_WORDLIST_PATH_GERMAN_SMALL: &str = "../../data/wordlists/german_SU
 #[derive(Clone)]
 pub struct BuiltinWList {
     words: super::WordMap,
+    name: String,
 }
 
 impl BuiltinWList {
@@ -33,31 +34,48 @@ impl BuiltinWList {
     ///
     /// Where the number is the frequency. Higher/Lower case is ignored.
     ///
+    /// Only words with the specified length will be included.
+    ///
     /// ## Errors
     ///
     /// Will fail if the file path cannot be read or the format is wrong.
-    pub fn load<P: AsRef<std::path::Path>>(wl_path: P) -> Result<Self, WordlistError> {
+    pub fn load<P: AsRef<std::path::Path>>(wl_path: P, len: usize) -> Result<Self, WordlistError> {
         let path: &Path = wl_path.as_ref();
         let file = std::fs::File::open(path)?;
 
         // don't load the whole string into memory
         let reader = std::io::BufReader::new(file);
-        let words: super::WordMap = serde_json::from_reader(reader)?;
+        let mut words: super::WordMap = serde_json::from_reader(reader)?;
+        words.only_words_with_len(len);
 
-        Ok(Self { words })
+        let name: String = if let Some(osstr) = path.file_name() {
+            osstr.to_str().unwrap_or("(no name)").to_string()
+        } else {
+            "(no name)".to_string()
+        };
+
+        Ok(Self { words, name })
     }
 
-    pub fn english() -> Self {
-        let words: super::WordMap = serde_json::from_str(RAW_WORDLIST_BUNDLED_ENGLISH).unwrap();
+    pub fn english(len: usize) -> Self {
+        let mut words: super::WordMap = serde_json::from_str(RAW_WORDLIST_BUNDLED_ENGLISH).unwrap();
+        words.only_words_with_len(len);
 
-        Self { words }
+        Self {
+            words,
+            name: "(builtin english)".to_string(),
+        }
     }
 
-    pub fn german() -> Self {
-        let words: super::WordMap =
+    pub fn german(len: usize) -> Self {
+        let mut words: super::WordMap =
             serde_json::from_str(RAW_WORDLIST_BUNDLED_GERMAN_SMALL).unwrap();
+        words.only_words_with_len(len);
 
-        Self { words }
+        Self {
+            words,
+            name: "(builtin german)".to_string(),
+        }
     }
 }
 
@@ -75,36 +93,27 @@ impl super::WordList for BuiltinWList {
 
 impl Default for BuiltinWList {
     fn default() -> Self {
-        Self::english()
+        Self::english(5)
     }
 }
 
 impl Debug for BuiltinWList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write(
-            f,
-            format_args!(
-                "BuiltinWList {{ \n\
-                \tamount: {}, \n\
-                \ttotal_freq: {}, \n\
-                \tcommon: {}, \n\
-                \tthreshold: {}, \n\
-                \tfreq_range: {:?}, \n\
-                \tover_threshold: {:#?}, \n\
-                }}",
-                self.amount(),
-                self.total_freq(),
-                self.wordmap().n_common(),
-                self.wordmap().threshold(),
-                self.wordmap().freq_range(),
-                self.over_threashold()
-            ),
-        )
+        f.debug_struct("BuiltinWList")
+            .field("name", &self.name)
+            .field("words", &self.words)
+            .finish()
     }
 }
 
 impl Display for BuiltinWList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:#?}")
+        writeln!(
+            f,
+            "{}:\nwords:\t{}\ntop 5:\t{:?}",
+            self.name,
+            self.len(),
+            self.n_most_likely(5)
+        )
     }
 }

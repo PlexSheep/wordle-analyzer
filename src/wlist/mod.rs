@@ -11,7 +11,7 @@ pub mod builtin;
 pub mod word;
 use word::*;
 
-use crate::error::{Error, WResult, WordlistError};
+use crate::error::{WResult, WordlistError};
 
 pub type AnyWordlist = Box<dyn WordList>;
 
@@ -35,8 +35,13 @@ pub trait WordList: Clone + std::fmt::Debug + Default + Sync + Display {
         (w.0.clone(), *w.1)
     }
     fn length_range(&self) -> impl RangeBounds<usize>;
-    fn amount(&self) -> usize {
+    #[must_use]
+    fn len(&self) -> usize {
         self.solutions().len()
+    }
+    #[must_use]
+    fn is_empty(&self) -> bool {
+        self.solutions().len() == 0
     }
     fn wordmap(&self) -> &WordMap;
     fn total_freq(&self) -> Frequency {

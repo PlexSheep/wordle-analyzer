@@ -11,12 +11,13 @@ pub type Frequency = f64;
 pub type Word = String;
 pub type WordData = (Word, Frequency);
 pub type WordDataRef<'wl> = (&'wl Word, &'wl Frequency);
+pub(crate) type WordMapInner = HashMap<Word, Frequency>;
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WordMap {
     #[serde(flatten)]
-    inner: HashMap<Word, Frequency>,
+    inner: WordMapInner,
 }
 
 impl Default for WordMap {
@@ -71,6 +72,9 @@ impl WordMap {
     pub fn inner(&self) -> &HashMap<Word, Frequency> {
         &self.inner
     }
+    pub fn inner_mut(&mut self) -> &mut HashMap<Word, Frequency> {
+        &mut self.inner
+    }
     pub fn get<I: std::fmt::Display>(&self, word: I) -> Option<WordData> {
         self.inner
             .get(&word.to_string())
@@ -81,6 +85,14 @@ impl WordMap {
         let relative: HashMap<Word, Frequency> =
             abs.into_iter().map(|p| (p.0, p.1 as f64 / n)).collect();
         relative.into()
+    }
+    pub fn only_words_with_len(&mut self, len: usize) {
+        self.inner = self
+            .inner
+            .iter()
+            .filter(|a| a.0.len() == len)
+            .map(|a| (a.0.to_owned(), *a.1))
+            .collect::<WordMapInner>();
     }
 }
 
