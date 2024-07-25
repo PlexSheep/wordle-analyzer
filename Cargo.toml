@@ -37,6 +37,7 @@ serde_json = { version = "1.0.114", optional = true }
 strum = "0.26.3"
 # serde_with = "3.7.0"
 thiserror = "1.0.58"
+tracing-test = "0.2.5"
 
 [[bin]]
 name = "wordlec"
@@ -57,3 +58,6 @@ required-features = ["solve", "cli", "builtin"]
 name = "wordlebench"
 path = "src/bin/bench/cli.rs"
 required-features = ["solve", "cli", "bench", "builtin"]
+
+[dev-dependencies]
+test-log = { version = "0.2.16", default-features = false, features = ["color", "trace"] }

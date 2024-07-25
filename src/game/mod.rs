@@ -320,7 +320,7 @@ impl<'wl, WL: WordList> Display for Game<'wl, WL> {
         for s in self
             .responses()
             .iter()
-            .map(|v| v.evaluation().to_owned().colorized_display(v.guess()))
+            .map(|v| v.evaluation().to_owned().colorized_display())
         {
             write!(f, "\"")?;
             for si in s {

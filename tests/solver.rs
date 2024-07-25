@@ -1,3 +1,6 @@
+use test_log::test; // set the log level with an envvar: `RUST_LOG=trace cargo test`
+
+use wordle_analyzer::game::evaluation::Evaluation;
 use wordle_analyzer::game::Game;
 use wordle_analyzer::solve::{AnyBuiltinSolver, NaiveSolver, Solver, StupidSolver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
@@ -69,7 +72,7 @@ fn test_naive_play_predetermined_game() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_naive_play_predetermined_game_by_manual_guess_and_eval() -> anyhow::Result<()> {
+fn test_naive_play_predetermined_game_manually() -> anyhow::Result<()> {
     let wl = wordlist();
     let sl =
         AnyBuiltinSolver::Naive(NaiveSolver::build(&wl).expect("could not build naive solver"));
@@ -77,35 +80,56 @@ fn test_naive_play_predetermined_game_by_manual_guess_and_eval() -> anyhow::Resu
     // pretend that a user inputs guesses manually
     let mut game = Game::build(5, false, 6, &wl, false)?;
     let _actual_solution: Option<WordData> = Some(("nines".into(), 0.002));
-    let mut next_guess;
+    let mut next_guess: Word;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("which"));
-    game.guess(next_guess, Some("xxfxx".into()))?;
+    game.guess(
+        next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xxfxx")?),
+    )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("their"));
-    game.guess(next_guess, Some("xxffx".into()))?;
+    game.guess(
+        next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xxffx")?),
+    )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("being"));
-    game.guess(next_guess, Some("xfffx".into()))?;
+    game.guess(
+        next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xfffx")?),
+    )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("since"));
-    game.guess(next_guess, Some("fcfxf".into()))?;
+    game.guess(
+        next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "fcfxf")?),
+    )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("lines"));
-    game.guess(next_guess, Some("xcccc".into()))?;
+    game.guess(
+        next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xcccc")?),
+    )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("mines"));
-    game.guess(next_guess, Some("xcccc".into()))?;
+    game.guess(
+        next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xcccc")?),
+    )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("wines"));
-    game.guess(next_guess, Some("xcccc".into()))?;
+    game.guess(
+        next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xcccc")?),
+    )?;
 
     // naive is at the moment too bad to solve "nines"
     assert!(game.finished());

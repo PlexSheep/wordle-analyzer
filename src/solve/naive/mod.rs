@@ -16,6 +16,15 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
         info!("using naive solver");
         Ok(Self { wl: wordlist })
     }
+    /// Guess a word from the wordlist for the given game
+    ///
+    /// ## Algorithm
+    ///
+    /// * Look at the evaluation for the last response and keep the correct letters
+    /// * Get all words that have these letters at the right position
+    /// * Discard words that have already been tried
+    /// * Discard all words that don't have the chars that we know from the last guess are in the
+    ///   word, but don't know the position of.
     fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
         // HACK: hardcoded length
         let mut pattern: String = String::from(".....");

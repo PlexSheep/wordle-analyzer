@@ -59,6 +59,7 @@ pub trait Solver<'wl, WL: WordList>: Clone + std::fmt::Debug + Sized + Sync {
     ///
     /// This function will return an error if [make_a_move](Solver::make_a_move) fails.
     fn play(&self, game: &mut Game<'wl, WL>) -> WResult<GuessResponse> {
+        // TODO: check if the game is finished already and return an Err if so
         let mut resp: GuessResponse;
         loop {
             resp = self.make_a_move(game)?;

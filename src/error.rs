@@ -51,6 +51,10 @@ pub enum GameError {
     TryingToPlayAFinishedGame,
     #[error("Tried to guess or use a word that is not in the wordlist ({0})")]
     WordNotInWordlist(Word),
+    #[error("Invalid syntax for manual evaluation creation")]
+    InvalidEvaluationSyntax(String),
+    #[error("The length of guess and evaluation must be the same")]
+    GuessAndEvalNotSameLen((String, String)),
 }
 
 #[derive(Debug, Clone, Error)]

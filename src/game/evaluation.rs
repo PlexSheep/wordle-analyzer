@@ -1,25 +1,25 @@
-use std::convert::Infallible;
-use std::str::FromStr;
-
 use libpt::cli::console::{style, StyledObject};
 
 use crate::wlist::word::Word;
 
 use super::response::Status;
+use super::{GameError, WResult};
 
+/// the [char] of the guess and the [Status] associated with it
 pub type EvaluationUnit = (char, Status);
 
+/// Basically a [String] with extra information associated with each char
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Evaluation {
     inner: Vec<EvaluationUnit>,
 }
 
 impl Evaluation {
-    pub(crate) fn colorized_display(&self, guess: &Word) -> Vec<StyledObject<String>> {
-        assert_eq!(guess.len(), self.inner.len());
+    /// Display the evaluation color coded
+    pub fn colorized_display(&self) -> Vec<StyledObject<String>> {
         let mut buf = Vec::new();
-        for (i, e) in self.inner.iter().enumerate() {
-            let mut c = style(guess.chars().nth(i).unwrap().to_string());
+        for e in self.inner.iter() {
+            let mut c = style(e.0.to_string());
             if e.1 == Status::Matched {
                 c = c.green();
             } else if e.1 == Status::Exists {
@@ -28,6 +28,45 @@ impl Evaluation {
             buf.push(c);
         }
         buf
+    }
+
+    /// The first string is the word the evaluation is for, The second string defines how the
+    /// characters of the first string match the solution.
+    ///
+    ///
+    /// ## Evaluation Format:
+    ///
+    /// 'x' means wrong character
+    ///
+    /// 'p' means present character
+    ///
+    /// 'c' means correct character
+    ///
+    /// ### Example:
+    ///
+    /// 'xxxcc' --- means the first 3 chars are wrong but the second 2 chars are correct
+    ///
+    /// 'xppxc' --- means the first character is wrong, the next two characters are present, the last
+    /// is correct
+    ///
+    /// ## Example
+    ///
+    /// "wordle xxxcff" --- the guess was wordle, the d is in the correct spot, the solution
+    /// contains 'l' and 'e', but on another index.
+    ///
+    pub fn build(guess: &Word, eval_str: &str) -> WResult<Self> {
+        if guess.len() != eval_str.len() {
+            return Err(GameError::GuessAndEvalNotSameLen((
+                guess.to_string(),
+                eval_str.to_string(),
+            ))
+            .into());
+        }
+        let mut v: Vec<EvaluationUnit> = Vec::new();
+        for (c, e) in guess.chars().zip(eval_str.chars()) {
+            v.push((c, Status::from(e)))
+        }
+        Ok(v.into())
     }
 }
 
@@ -46,19 +85,8 @@ impl From<Vec<EvaluationUnit>> for Evaluation {
     }
 }
 
-impl From<&str> for Evaluation {
-    fn from(value: &str) -> Self {
-        Self::from_str(value).unwrap()
-    }
-}
-
-impl FromStr for Evaluation {
-    type Err = Infallible;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut v: Vec<EvaluationUnit> = Vec::new();
-        for c in s.chars() {
-            v.push((c, Status::from(c)))
-        }
-        Ok(v.into())
+impl From<Evaluation> for Word {
+    fn from(value: Evaluation) -> Self {
+        Word::from(value.inner.into_iter().map(|v| v.0).collect::<String>())
     }
 }
