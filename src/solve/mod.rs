@@ -1,7 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 use crate::{
-    error::{Error, WResult},
+    error::{Error, SolverError, WResult},
     game::{response::*, Game},
     wlist::{
         word::{Word, WordData},
@@ -127,7 +127,7 @@ impl BuiltinSolverNames {
 }
 
 impl FromStr for BuiltinSolverNames {
-    type Err = Error;
+    type Err = SolverError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "naive" => Ok(Self::Naive),

@@ -33,14 +33,6 @@ pub enum Error {
         #[from]
         source: anyhow::Error,
     },
-    // for `FromStr` of `BuiltinSolver`
-    #[error("Unknown builtin solver")]
-    UnknownBuiltinSolver,
-    #[error("pattern matching error")]
-    Regex {
-        #[from]
-        source: regex::Error,
-    },
     #[error("Error sharing the benchmark data over multiple threads")]
     Mutex {
         #[from]
@@ -72,6 +64,8 @@ pub enum BenchError {
 pub enum SolverError {
     #[error("Wordlist has no matches for the gamestate")]
     NoMatches,
+    #[error("Unknown builtin solver")]
+    UnknownBuiltinSolver,
 }
 
 #[derive(Debug, Error)]
@@ -85,5 +79,10 @@ pub enum WordlistError {
     IO {
         #[from]
         source: std::io::Error,
+    },
+    #[error("pattern matching error")]
+    Regex {
+        #[from]
+        source: regex::Error,
     },
 }
