@@ -69,7 +69,7 @@ fn test_naive_play_predetermined_game() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_naive_play_predetermined_game_by_manual_guess_and_evak() -> anyhow::Result<()> {
+fn test_naive_play_predetermined_game_by_manual_guess_and_eval() -> anyhow::Result<()> {
     let wl = wordlist();
     let sl =
         AnyBuiltinSolver::Naive(NaiveSolver::build(&wl).expect("could not build naive solver"));
