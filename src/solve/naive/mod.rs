@@ -1,6 +1,10 @@
-use libpt::log::{info, trace};
+use core::panic;
+use std::collections::HashMap;
+
+use libpt::log::{debug, info, trace};
 
 use crate::error::{SolverError, WResult};
+use crate::game::response;
 use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
@@ -26,51 +30,67 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
     /// * Discard all words that don't have the chars that we know from the last guess are in the
     ///   word, but don't know the position of.
     fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
-        // HACK: hardcoded length
         let mut pattern: String = ".".repeat(game.length());
         let mut other_chars: Vec<char> = Vec::new();
-        let response = game.last_response();
-        trace!(
-            "guessing best guess for last response: {response:#?}\n{:#?}",
-            response.map(|a| a.evaluation())
-        );
-        if response.is_some() {
-            for (idx, p) in response
-                .unwrap()
-                .evaluation()
-                .clone()
-                .into_iter()
-                .enumerate()
-            {
-                if p.1 == Status::Matched {
-                    pattern.replace_range(idx..idx + 1, &p.0.to_string());
-                } else if p.1 == Status::Exists {
-                    other_chars.push(p.0)
+        // a hash map telling how many of the characters may be in a correct word (+1)
+        // if the value for a char is 2 => it may be in the solution 1 time
+        // if the value for a char is 1 => it may not be in the solution
+        let mut wrong_chars: Vec<char> = Vec::new();
+        let responses = game.responses().iter().enumerate();
+        for (_idx, response) in responses {
+            for (idx, p) in response.evaluation().clone().into_iter().enumerate() {
+                match p.1 {
+                    Status::Matched => {
+                        pattern.replace_range(idx..idx + 1, &p.0.to_string());
+                    }
+                    Status::Exists => other_chars.push(p.0),
+                    Status::None => wrong_chars.push(p.0),
                 }
             }
         }
-        trace!("other chars: {:?}", other_chars);
-        let mut matches: Vec<WordData> = game.wordlist().get_words_matching(pattern)?;
+        debug!("other chars: {:?}", other_chars);
+        debug!("wrong chars: {:?}", wrong_chars);
+        let mut matches: Vec<WordData> = game.wordlist().get_words_matching(&pattern)?;
         if matches.is_empty() {
-            return Err(SolverError::NoMatches.into());
+            return Err(SolverError::NoMatches(game.solution().cloned()).into());
         }
         matches = matches
             .iter()
             // only words that have not been guessed yet
             .filter(|p| !game.made_guesses().contains(&&p.0))
-            // only words that contain the letters we found earlier (that were not matched)
+            // only words that do contain the chars we know exist
             .filter(|p| {
-                // TODO: don't repeat unmatched contained chars on the same position twice #2
-                let mut fits = true;
-                for c in other_chars.iter() {
-                    fits &= p.0.contains(*c);
+                for other in &other_chars {
+                    if p.0.contains(*other) {
+                        // TODO: account for chars that occur multiple times
+                        continue;
+                    } else {
+                        return false;
+                    }
                 }
-                fits
+                true
+            })
+            // only words that do not contain the letters we know are wrong
+            .filter(|p| {
+                for wrong in &wrong_chars {
+                    if p.0.contains(*wrong) {
+                        let mut tmp = 0;
+                        let in_other = other_chars.iter().filter(|v| **v == *wrong).count()
+                            + pattern.chars().filter(|v| *v == *wrong).count();
+                        // TODO: account for chars that occur multiple times
+                        if in_other > tmp {
+                            tmp += 1;
+                            continue;
+                        }
+                        return false;
+                    }
+                }
+                true
             })
             .map(|v| v.to_owned())
             .collect();
         if matches.is_empty() {
-            return Err(SolverError::NoMatches.into());
+            return Err(SolverError::NoMatches(game.solution().cloned()).into());
         }
         Ok(matches[0].0.to_owned())
     }

@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::bench::report::Report;
-use crate::wlist::word::Word;
+use crate::wlist::word::{Word, WordData};
 
 pub type WResult<T> = std::result::Result<T, Error>;
 pub type GameResult<T> = std::result::Result<T, GameError>;
@@ -62,8 +62,8 @@ pub enum BenchError {
 
 #[derive(Debug, Clone, Error)]
 pub enum SolverError {
-    #[error("Wordlist has no matches for the gamestate")]
-    NoMatches,
+    #[error("Wordlist has no matches for the gamestate (solution: {0:?})")]
+    NoMatches(Option<WordData>),
     #[error("Unknown builtin solver")]
     UnknownBuiltinSolver,
 }

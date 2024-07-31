@@ -172,7 +172,7 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
                     eprintln!("{}", style(best_guess.unwrap_err()).red().bold());
                     continue;
                 }
-                debug!("game state: {game:?}");
+                trace!("game state: {game:?}");
                 println!("best guess: {}", best_guess.unwrap());
             }
             ReplCommand::Guess {
@@ -188,7 +188,7 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
                     continue;
                 }
                 println!("{}", guess.unwrap());
-                debug!("game state: {game:#?}");
+                trace!("game state: {game:#?}");
             }
             ReplCommand::New => game = builder.build()?,
             ReplCommand::Undo { n } => game.undo(n)?,
@@ -218,7 +218,7 @@ fn play_native_non_interactive(cli: Cli) -> anyhow::Result<()> {
         "eng" => BuiltinWList::english(cli.length),
         _ => BuiltinWList::load(&cli.wordlist, cli.length)?,
     };
-    debug!("wordlist: {wl}");
+    trace!("wordlist: {wl}");
     let mut builder = game::Game::builder(&wl)
         .length(cli.length)
         .max_steps(cli.max_steps)
@@ -238,13 +238,13 @@ fn play_native_non_interactive(cli: Cli) -> anyhow::Result<()> {
     let solver = cli.solver.to_solver(&wl);
     let mut game = builder.build()?;
 
-    debug!("{game:#?}");
+    trace!("{game:#?}");
 
     let mut response: GuessResponse;
     let mut _guess: Word;
     loop {
         response = solver.make_a_move(&mut game)?;
-        debug!("game state: {game:#?}");
+        trace!("game state: {game:#?}");
         println!("{}. guess: {response}", game.step() - 1);
 
         if response.finished() {

@@ -93,7 +93,7 @@ pub trait WordList: Clone + std::fmt::Debug + Default + Sync + Display {
         }
         buf
     }
-    fn get_words_matching(&self, pattern: String) -> WResult<Vec<WordData>> {
+    fn get_words_matching(&self, pattern: &str) -> WResult<Vec<WordData>> {
         let pattern = Regex::new(&pattern).map_err(WordlistError::from)?;
         let hay = self.raw_wordlist();
         let keys = pattern.captures_iter(&hay);
