@@ -72,13 +72,10 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                             already_tried.push((*spot, *other.0));
                         }
 
-                        if p.0
-                            .char_indices()
-                            .filter(|ci| ci.1 == *other.0 && !already_tried.contains(ci))
-                            .count()
-                            < 1
-                        {
-                            return false;
+                        for c in p.0.char_indices() {
+                            if c.1 == *other.0 && other.1.contains(&c.0) {
+                                return false;
+                            }
                         }
                     } else {
                         return false;
