@@ -72,7 +72,7 @@ fn main() -> anyhow::Result<()> {
     let bench = BuiltinBenchmark::build(&wl, solver, builder, cli.threads)?;
     trace!("{bench:#?}");
 
-    bench.start(50, &bench.builder())?;
+    bench.start(cli.n, &bench.builder())?;
 
     loop {
         sleep(std::time::Duration::from_secs(1));
