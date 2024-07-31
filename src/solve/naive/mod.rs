@@ -27,7 +27,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
     ///   word, but don't know the position of.
     fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
         // HACK: hardcoded length
-        let mut pattern: String = String::from(".....");
+        let mut pattern: String = ".".repeat(game.length());
         let mut other_chars: Vec<char> = Vec::new();
         let response = game.last_response();
         trace!(
