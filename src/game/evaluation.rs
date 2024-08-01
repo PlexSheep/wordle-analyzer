@@ -68,6 +68,18 @@ impl Evaluation {
         }
         Ok(v.into())
     }
+
+    pub fn inner(&self) -> &Vec<EvaluationUnit> {
+        &self.inner
+    }
+
+    pub fn inner_mut(&mut self) -> &mut Vec<EvaluationUnit> {
+        &mut self.inner
+    }
+
+    pub fn guess(&self) -> Word {
+        Word::from(self)
+    }
 }
 
 impl IntoIterator for Evaluation {
@@ -87,6 +99,12 @@ impl From<Vec<EvaluationUnit>> for Evaluation {
 
 impl From<Evaluation> for Word {
     fn from(value: Evaluation) -> Self {
-        Word::from(value.inner.into_iter().map(|v| v.0).collect::<String>())
+        Word::from(value.inner.iter().map(|v| v.0).collect::<String>())
+    }
+}
+
+impl From<&Evaluation> for Word {
+    fn from(value: &Evaluation) -> Self {
+        Word::from(value.inner.iter().map(|v| v.0).collect::<String>())
     }
 }
