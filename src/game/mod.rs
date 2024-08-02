@@ -129,17 +129,18 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     pub(crate) fn evaluate(mut solution: WordData, guess: &Word) -> Evaluation {
         let mut evaluation = Vec::new();
         let mut status: Status;
-        for (idx, c) in guess.chars().enumerate() {
-            if solution.0.chars().nth(idx) == Some(c) {
+        let mut buf = solution.0.clone();
+        for ((idx, c_guess), c_sol) in guess.chars().enumerate().zip(solution.0.chars()) {
+            if c_guess == c_sol {
                 status = Status::Matched;
-                solution.0.replace_range(idx..idx + 1, "_");
-            } else if solution.0.contains(c) {
+                buf.replace_range(idx..idx + 1, "_");
+            } else if buf.contains(c_guess) {
                 status = Status::Exists;
-                solution.0 = solution.0.replacen(c, "_", 1);
+                buf = buf.replacen(c_guess, "_", 1);
             } else {
                 status = Status::None
             }
-            evaluation.push((c, status));
+            evaluation.push((c_guess, status));
         }
         evaluation.into()
     }
