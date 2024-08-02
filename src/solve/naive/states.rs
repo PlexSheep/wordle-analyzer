@@ -9,7 +9,7 @@ pub(crate) type CharMap = HashMap<char, CharInfo>;
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct CharInfo {
     confirmed_indexes: HashSet<usize>,
-    tried_indexes: HashSet<usize>,
+    bad_indexes: HashSet<usize>,
     occurences_amount: Range<usize>,
 }
 
@@ -38,13 +38,12 @@ impl CharInfo {
     pub fn new(word_length: usize) -> Self {
         Self {
             confirmed_indexes: HashSet::new(),
-            tried_indexes: HashSet::new(),
+            bad_indexes: HashSet::new(),
             occurences_amount: 0..word_length,
         }
     }
 
     pub fn found_at(&mut self, idx: usize) {
-        self.tried_indexes.insert(idx);
         self.confirmed_indexes.insert(idx);
 
         if self.occurences_amount.start < 1 {
@@ -54,17 +53,11 @@ impl CharInfo {
 
     /// tried to guess a char we know exists at this position, but it was incorrect
     pub fn tried_but_failed(&mut self, idx: usize) {
-        self.tried_indexes.insert(idx);
-    }
-
-    /// char is not in the solution
-    pub fn not_in_solution(&mut self) {
-        self.occurences_amount.start = 0;
-        self.occurences_amount.end = 0;
+        self.bad_indexes.insert(idx);
     }
 
     pub fn has_been_tried(&self, idx: usize) -> bool {
-        self.tried_indexes.contains(&idx)
+        self.bad_indexes.contains(&idx)
     }
 
     #[must_use]
@@ -72,8 +65,12 @@ impl CharInfo {
         self.occurences_amount.end > 0
     }
 
-    pub fn at_least_n_occurences(&mut self, n: usize) {
-        self.occurences_amount.start = n;
+    pub fn min_occurences(&mut self, min: usize) {
+        self.occurences_amount.start = min;
+    }
+
+    pub(crate) fn max_occurences(&mut self, max: usize) {
+        self.occurences_amount.end = max
     }
 
     pub(crate) fn confirmed_indexes(&self) -> &HashSet<usize> {
@@ -85,11 +82,11 @@ impl CharInfo {
     }
 
     pub(crate) fn tried_indexes(&self) -> &HashSet<usize> {
-        &self.tried_indexes
+        &self.bad_indexes
     }
 
     pub(crate) fn tried_indexes_mut(&mut self) -> &mut HashSet<usize> {
-        &mut self.tried_indexes
+        &mut self.bad_indexes
     }
 
     pub(crate) fn occurences_amount(&self) -> &Range<usize> {
@@ -105,12 +102,12 @@ impl CharInfo {
         solution_candidate: &str,
         character: char,
     ) -> bool {
-        self.occurences_amount.contains(
-            &solution_candidate
-                .chars()
-                .filter(|c| *c == character)
-                .count(),
-        )
+        let occ = solution_candidate
+            .chars()
+            .filter(|c| *c == character)
+            .count();
+
+        self.occurences_amount.start <= occ && occ <= self.occurences_amount.end
     }
 }
 
@@ -118,9 +115,9 @@ impl Debug for CharInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.part_of_solution() {
             f.debug_struct("CharInfo")
-                .field("indexes", &self.confirmed_indexes)
+                .field("correct_idxs", &self.confirmed_indexes)
                 .field("amnt_occ", &self.occurences_amount)
-                .field("tried", &self.tried_indexes)
+                .field("bad_idxs", &self.bad_indexes)
                 .finish()
         } else {
             write!(f, "(not in solution)")

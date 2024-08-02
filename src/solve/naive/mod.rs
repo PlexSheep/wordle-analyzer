@@ -32,16 +32,12 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
     /// * Discard all words that don't have the chars that we know from the last guess are in the
     ///   word, but don't know the position of.
     fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
-        if game.responses().is_empty() {
-            // TODO: come up with a proper way to make the first guess
-            return Ok(Word::from("which"));
-        }
-
         let mut pattern: String = ".".repeat(game.length());
         // indexes we tried for that char and the number of occurences
         let mut state: SolverState = SolverState::new();
         let responses = game.responses().iter().enumerate();
         for (_idx, response) in responses {
+            let mut already_found_amounts: HashMap<char, usize> = HashMap::new();
             let evaluation: &Evaluation = response.evaluation();
             for (idx, p) in evaluation.clone().into_iter().enumerate() {
                 match p.1 {
@@ -53,6 +49,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                             .entry(p.0)
                             .or_insert(CharInfo::new(game.length()))
                             .found_at(idx);
+                        *already_found_amounts.entry(p.0).or_default() += 1;
                     }
                     Status::Exists => {
                         let cinfo = state
@@ -60,16 +57,16 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                             .entry(p.0)
                             .or_insert(CharInfo::new(game.length()));
                         cinfo.tried_but_failed(idx);
-                        cinfo.at_least_n_occurences(
-                            response.guess().chars().filter(|c| *c == p.0).count(),
-                        )
+                        *already_found_amounts.entry(p.0).or_default() += 1;
+                        cinfo.min_occurences(already_found_amounts[&p.0]);
                     }
                     Status::None => state
                         .char_map_mut()
                         .entry(p.0)
                         .or_insert(CharInfo::new(game.length()))
-                        .not_in_solution(),
+                        .max_occurences(*already_found_amounts.entry(p.0).or_default()),
                 }
+                trace!("absolute frequencies: {already_found_amounts:?}");
             }
         }
 
@@ -90,9 +87,8 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                         .char_map_mut()
                         .entry(c)
                         .or_insert(CharInfo::new(game.length()));
-                    if !cinfo.part_of_solution()
-                        || cinfo.has_been_tried(idx)
-                        || !cinfo.occurences_of_char_possible(&solution_candidate.0, c)
+                    if !cinfo.part_of_solution() || cinfo.has_been_tried(idx)
+                    // || !cinfo.occurences_of_char_possible(&solution_candidate.0, c)
                     {
                         return false;
                     }
@@ -105,12 +101,6 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             return Err(SolverError::NoMatches(game.solution().cloned()).into());
         }
         Ok(matches[0].0.to_owned())
-    }
-}
-
-impl<'wl, WL: WordList> NaiveSolver<'wl, WL> {
-    fn get_highest_possible_abs_freq(indexes: &[usize], game: &crate::game::Game<WL>) -> usize {
-        game.length() - indexes.len()
     }
 }
 
