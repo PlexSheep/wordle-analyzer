@@ -49,6 +49,16 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     /// # Errors
     ///
     /// No Errors
+    ///
+    /// # Parameters
+    ///
+    /// `length` - how many chars the solution has
+    /// `precompute` -  how many chars the solution has
+    /// `max_steps` -  how many tries the player has
+    /// `precompute` -  how many chars the solution has
+    /// `wlist` -  which wordlist to use
+    /// `generate_solution` -  should the game have a randomly generated solution?
+
     pub fn build(
         length: usize,
         precompute: bool,
@@ -115,7 +125,8 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         Ok(response)
     }
 
-    pub fn evaluate(mut solution: WordData, guess: &Word) -> Evaluation {
+    /// Generates an [Evaluation] for a given solution and guess.
+    pub(crate) fn evaluate(mut solution: WordData, guess: &Word) -> Evaluation {
         let mut evaluation = Vec::new();
         let mut status: Status;
         for (idx, c) in guess.chars().enumerate() {
@@ -140,18 +151,25 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         Ok(())
     }
 
+    /// get how many characters the words have for this game
     pub fn length(&self) -> usize {
         self.length
     }
 
+    /// get the solution for this game, if the game is aware of one.
+    ///
+    /// Consider that games may also be played on other platforms, so the game might not "know" the
+    /// solution yet.
     pub fn solution(&self) -> Option<&WordData> {
         self.solution.as_ref()
     }
 
+    /// get how many guesses have been made already
     pub fn step(&self) -> usize {
         self.step
     }
 
+    /// true if the game has finished and no more guesses can be made
     pub fn finished(&self) -> bool {
         if self.responses().is_empty() {
             return false;
@@ -159,27 +177,35 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         self.responses().last().unwrap().finished()
     }
 
+    /// true if the game has finished and the solution was found
     pub fn won(&self) -> bool {
-        if self.responses().is_empty() {
+        if !self.finished() || self.responses().is_empty() {
             return false;
         }
         self.responses().last().unwrap().won()
     }
 
+    /// get how many tries the player has
     pub fn max_steps(&self) -> usize {
         self.max_steps
     }
+
+    /// get the responses that were already made
     pub fn responses(&self) -> &Vec<GuessResponse> {
         &self.responses
     }
+
+    /// get the most recent response
     pub fn last_response(&self) -> Option<&GuessResponse> {
         self.responses().last()
     }
 
+    /// get the [WordList] for this game
     pub fn wordlist(&self) -> &WL {
         self.wordlist
     }
 
+    /// get the [Words](Word) that have already been tried
     pub(crate) fn made_guesses(&self) -> Vec<&Word> {
         self.responses.iter().map(|r| r.guess()).collect()
     }
