@@ -1,11 +1,12 @@
 use std::collections::{HashMap, HashSet};
+use std::fmt::Debug;
 use std::ops::{Range, RangeBounds};
 
 use crate::error::WResult;
 
 pub(crate) type CharMap = HashMap<char, CharInfo>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Clone, PartialEq, Eq)]
 pub(crate) struct CharInfo {
     confirmed_indexes: HashSet<usize>,
     tried_indexes: HashSet<usize>,
@@ -34,8 +35,12 @@ impl SolverState {
 }
 
 impl CharInfo {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(word_length: usize) -> Self {
+        Self {
+            confirmed_indexes: HashSet::new(),
+            tried_indexes: HashSet::new(),
+            occurences_amount: 0..word_length,
+        }
     }
 
     pub fn found_at(&mut self, idx: usize) {
@@ -106,5 +111,19 @@ impl CharInfo {
                 .filter(|c| *c == character)
                 .count(),
         )
+    }
+}
+
+impl Debug for CharInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.part_of_solution() {
+            f.debug_struct("CharInfo")
+                .field("indexes", &self.confirmed_indexes)
+                .field("amnt_occ", &self.occurences_amount)
+                .field("tried", &self.tried_indexes)
+                .finish()
+        } else {
+            write!(f, "(not in solution)")
+        }
     }
 }

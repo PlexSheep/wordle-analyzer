@@ -32,6 +32,11 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
     /// * Discard all words that don't have the chars that we know from the last guess are in the
     ///   word, but don't know the position of.
     fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
+        if game.responses().is_empty() {
+            // TODO: come up with a proper way to make the first guess
+            return Ok(Word::from("which"));
+        }
+
         let mut pattern: String = ".".repeat(game.length());
         // indexes we tried for that char and the number of occurences
         let mut state: SolverState = SolverState::new();
@@ -43,23 +48,32 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                     Status::Matched => {
                         pattern.replace_range(idx..idx + 1, &p.0.to_string());
 
-                        state.char_map_mut().entry(p.0).or_default().found_at(idx);
+                        state
+                            .char_map_mut()
+                            .entry(p.0)
+                            .or_insert(CharInfo::new(game.length()))
+                            .found_at(idx);
                     }
-                    Status::Exists => state
-                        .char_map_mut()
-                        .entry(p.0)
-                        .or_default()
-                        .at_least_n_occurences(
+                    Status::Exists => {
+                        let cinfo = state
+                            .char_map_mut()
+                            .entry(p.0)
+                            .or_insert(CharInfo::new(game.length()));
+                        cinfo.tried_but_failed(idx);
+                        cinfo.at_least_n_occurences(
                             response.guess().chars().filter(|c| *c == p.0).count(),
-                        ),
+                        )
+                    }
                     Status::None => state
                         .char_map_mut()
                         .entry(p.0)
-                        .or_default()
+                        .or_insert(CharInfo::new(game.length()))
                         .not_in_solution(),
                 }
             }
         }
+
+        debug!("built state from responses: {state:#?}");
 
         // get all words that have the correct chars on the same positions
         let mut matches: Vec<WordData> = game.wordlist().get_words_matching(&pattern)?;
@@ -72,11 +86,13 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             .filter(|p| !game.made_guesses().contains(&&p.0))
             .filter(|solution_candidate| {
                 for (idx, c) in solution_candidate.0.char_indices() {
-                    let cinfo = state.char_map_mut().entry(c).or_default();
-                    // bad word if it uses a char thats not in the solution
+                    let cinfo = state
+                        .char_map_mut()
+                        .entry(c)
+                        .or_insert(CharInfo::new(game.length()));
                     if !cinfo.part_of_solution()
                         || cinfo.has_been_tried(idx)
-                        || cinfo.occurences_of_char_possible(&solution_candidate.0, c)
+                        || !cinfo.occurences_of_char_possible(&solution_candidate.0, c)
                     {
                         return false;
                     }
