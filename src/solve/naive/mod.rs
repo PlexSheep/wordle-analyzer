@@ -3,11 +3,14 @@ use std::collections::HashMap;
 use libpt::log::{debug, info, trace};
 
 use crate::error::{SolverError, WResult};
-use crate::game::evaluation::Evaluation;
+use crate::game::evaluation::{Evaluation, EvaluationUnit};
 use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
 use super::{AnyBuiltinSolver, Solver, Status};
+
+mod states;
+use states::*;
 
 #[derive(Debug, Clone)]
 pub struct NaiveSolver<'wl, WL> {
@@ -31,7 +34,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
     fn guess_for(&self, game: &crate::game::Game<WL>) -> WResult<Word> {
         let mut pattern: String = ".".repeat(game.length());
         // indexes we tried for that char and the number of occurences
-        let mut other_chars: HashMap<char, (Vec<usize>, usize)> = HashMap::new();
+        let mut state: SolverState = SolverState::new();
         let responses = game.responses().iter().enumerate();
         for (_idx, response) in responses {
             let evaluation: &Evaluation = response.evaluation();
@@ -40,25 +43,23 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                     Status::Matched => {
                         pattern.replace_range(idx..idx + 1, &p.0.to_string());
 
-                        other_chars.entry(p.0).or_default();
-                        let v = other_chars.get_mut(&p.0).unwrap();
-                        v.1 += 1;
+                        state.char_map_mut().entry(p.0).or_default().found_at(idx);
                     }
-                    Status::Exists => {
-                        other_chars.entry(p.0).or_default();
-                        let v = other_chars.get_mut(&p.0).unwrap();
-                        v.0.push(idx);
-
-                        // TODO: count how many times the char occurs
-                        v.1 += 1;
-                    }
-                    Status::None => {
-                        other_chars.entry(p.0).or_default();
-                    }
+                    Status::Exists => state
+                        .char_map_mut()
+                        .entry(p.0)
+                        .or_default()
+                        .at_least_n_occurences(
+                            response.guess().chars().filter(|c| *c == p.0).count(),
+                        ),
+                    Status::None => state
+                        .char_map_mut()
+                        .entry(p.0)
+                        .or_default()
+                        .not_in_solution(),
                 }
             }
         }
-        debug!("other chars: {:?}", other_chars);
 
         // get all words that have the correct chars on the same positions
         let mut matches: Vec<WordData> = game.wordlist().get_words_matching(&pattern)?;
@@ -69,24 +70,14 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             .iter()
             // only words that have not been guessed yet
             .filter(|p| !game.made_guesses().contains(&&p.0))
-            // only words that do contain the chars we know exist
-            .filter(|p| {
-                for other in other_chars.iter() {
-                    if p.0.contains(*other.0) {
-                        let mut already_tried: Vec<(_, _)> = Vec::new();
-                        for spot in &other.1 .0 {
-                            already_tried.push((spot, *other.0));
-                        }
-
-                        if p.0.chars().filter(|c| *c == *other.0).count() > other.1 .1 {
-                            return false; // the char occurs too often in that word
-                        }
-                        for c in p.0.char_indices() {
-                            if c.1 == *other.0 && other.1 .0.contains(&c.0) {
-                                return false;
-                            }
-                        }
-                    } else if other.1 .1 != 0 {
+            .filter(|solution_candidate| {
+                for (idx, c) in solution_candidate.0.char_indices() {
+                    let cinfo = state.char_map_mut().entry(c).or_default();
+                    // bad word if it uses a char thats not in the solution
+                    if !cinfo.part_of_solution()
+                        || cinfo.has_been_tried(idx)
+                        || cinfo.occurences_of_char_possible(&solution_candidate.0, c)
+                    {
                         return false;
                     }
                 }
@@ -98,6 +89,12 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             return Err(SolverError::NoMatches(game.solution().cloned()).into());
         }
         Ok(matches[0].0.to_owned())
+    }
+}
+
+impl<'wl, WL: WordList> NaiveSolver<'wl, WL> {
+    fn get_highest_possible_abs_freq(indexes: &[usize], game: &crate::game::Game<WL>) -> usize {
+        game.length() - indexes.len()
     }
 }
 
