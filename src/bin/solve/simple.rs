@@ -181,7 +181,7 @@ fn help_guess_interactive(cli: Cli) -> anyhow::Result<()> {
             } => {
                 let evaluation_converted: Evaluation =
                     Evaluation::build(&your_guess, &evalutation)?;
-                let guess = game.guess(your_guess, Some(evaluation_converted));
+                let guess = game.guess(&your_guess, Some(evaluation_converted));
                 debug!("your guess: {guess:?}");
                 if guess.is_err() {
                     eprintln!("{}", style(guess.unwrap_err()).red().bold());

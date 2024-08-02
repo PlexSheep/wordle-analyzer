@@ -101,7 +101,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     ///
     /// This function will return an error if the length of the [Word] is wrong It will also error
     /// if the game is finished.
-    pub fn guess(&mut self, guess: Word, eval: Option<Evaluation>) -> GameResult<GuessResponse> {
+    pub fn guess(&mut self, guess: &Word, eval: Option<Evaluation>) -> GameResult<GuessResponse> {
         if guess.len() != self.length {
             return Err(GameError::GuessHasWrongLength(guess.len()));
         }
@@ -109,7 +109,7 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
             return Err(GameError::TryingToPlayAFinishedGame);
         }
         if self.wordlist.get_word(&guess).is_none() {
-            return Err(GameError::WordNotInWordlist(guess));
+            return Err(GameError::WordNotInWordlist(guess.to_string()));
         }
         self.step += 1;
 
@@ -321,6 +321,14 @@ impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
     /// `wl`.
     pub fn wordlist(mut self, wl: &'wl WL) -> Self {
         self.wordlist = wl;
+        self
+    }
+
+    /// Enable or disable Generation of a solution for this builder
+    ///
+    /// Default is true
+    pub fn generate_solution(mut self, generate: bool) -> Self {
+        self.generate_solution = generate;
         self
     }
 
