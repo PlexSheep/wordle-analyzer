@@ -36,22 +36,17 @@ fn test_naive_play_predetermined_game() -> anyhow::Result<()> {
     sl.make_a_move(&mut game)?;
     assert_eq!(
         game.responses().last().unwrap().guess(),
-        &Word::from("their")
+        &Word::from("first")
     );
     sl.make_a_move(&mut game)?;
     assert_eq!(
         game.responses().last().unwrap().guess(),
-        &Word::from("being")
+        &Word::from("lives")
     );
     sl.make_a_move(&mut game)?;
     assert_eq!(
         game.responses().last().unwrap().guess(),
-        &Word::from("since")
-    );
-    sl.make_a_move(&mut game)?;
-    assert_eq!(
-        game.responses().last().unwrap().guess(),
-        &Word::from("lines")
+        &Word::from("sides")
     );
     sl.make_a_move(&mut game)?;
     assert_eq!(
@@ -61,12 +56,16 @@ fn test_naive_play_predetermined_game() -> anyhow::Result<()> {
     sl.make_a_move(&mut game)?;
     assert_eq!(
         game.responses().last().unwrap().guess(),
-        &Word::from("wines")
+        &Word::from("pines")
+    );
+    sl.make_a_move(&mut game)?;
+    assert_eq!(
+        game.responses().last().unwrap().guess(),
+        &Word::from("nines")
     );
 
-    // naive is at the moment too bad to solve "nines"
     assert!(game.finished());
-    assert!(!game.won());
+    assert!(game.won());
 
     Ok(())
 }
@@ -85,55 +84,54 @@ fn test_naive_play_predetermined_game_manually() -> anyhow::Result<()> {
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("which"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xxfxx")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
-    assert_eq!(next_guess, Word::from("their"));
+    assert_eq!(next_guess, Word::from("first"));
     game.guess(
-        next_guess.clone(),
-        Some(Evaluation::build(&next_guess, "xxffx")?),
+        &next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xcxfx")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
-    assert_eq!(next_guess, Word::from("being"));
+    assert_eq!(next_guess, Word::from("lives"));
     game.guess(
-        next_guess.clone(),
-        Some(Evaluation::build(&next_guess, "xfffx")?),
+        &next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xcxcc")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
-    assert_eq!(next_guess, Word::from("since"));
+    assert_eq!(next_guess, Word::from("sides"));
     game.guess(
-        next_guess.clone(),
-        Some(Evaluation::build(&next_guess, "fcfxf")?),
-    )?;
-
-    next_guess = sl.guess_for(&game)?;
-    assert_eq!(next_guess, Word::from("lines"));
-    game.guess(
-        next_guess.clone(),
-        Some(Evaluation::build(&next_guess, "xcccc")?),
+        &next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "xcxcc")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("mines"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xcccc")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
-    assert_eq!(next_guess, Word::from("wines"));
+    assert_eq!(next_guess, Word::from("pines"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xcccc")?),
     )?;
 
-    // naive is at the moment too bad to solve "nines"
+    next_guess = sl.guess_for(&game)?;
+    assert_eq!(next_guess, Word::from("nines"));
+    game.guess(
+        &next_guess.clone(),
+        Some(Evaluation::build(&next_guess, "ccccc")?),
+    )?;
+
     assert!(game.finished());
-    assert!(!game.won());
+    assert!(game.won());
 
     Ok(())
 }
