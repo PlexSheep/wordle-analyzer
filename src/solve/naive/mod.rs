@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use libpt::log::{debug, info, trace};
+use libpt::log::{debug, error, info, trace};
 
 use crate::error::{SolverError, WResult};
 use crate::game::evaluation::{Evaluation, EvaluationUnit};
@@ -75,20 +75,29 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
         // get all words that have the correct chars on the same positions
         let mut matches: Vec<WordData> = game.wordlist().get_words_matching(&pattern)?;
         if matches.is_empty() {
+            error!("no matches even when just considering the known good chars");
             return Err(SolverError::NoMatches(game.solution().cloned()).into());
+        } else {
+            trace!("found {} basic matches", matches.len())
         }
         matches = matches
             .iter()
             // only words that have not been guessed yet
             .filter(|p| !game.made_guesses().contains(&&p.0))
             .filter(|solution_candidate| {
+                if !game.responses().is_empty()
+                    && !state.has_all_known_contained(&solution_candidate.0)
+                {
+                    trace!("known cont:{:#?}", state.get_all_known_contained());
+                    return false;
+                }
                 for (idx, c) in solution_candidate.0.char_indices() {
                     let cinfo = state
                         .char_map_mut()
                         .entry(c)
                         .or_insert(CharInfo::new(game.length()));
-                    if !cinfo.part_of_solution() || cinfo.has_been_tried(idx)
-                    // || !cinfo.occurences_of_char_possible(&solution_candidate.0, c)
+                    if !cinfo.occurences_of_char_possible(&solution_candidate.0, c)
+                        || cinfo.has_been_tried(idx)
                     {
                         return false;
                     }

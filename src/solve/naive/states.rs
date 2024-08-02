@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use std::ops::{Range, RangeBounds};
 
 use crate::error::WResult;
+use crate::wlist::word::Word;
 
 pub(crate) type CharMap = HashMap<char, CharInfo>;
 
@@ -31,6 +32,22 @@ impl SolverState {
 
     pub fn char_map_mut(&mut self) -> &mut CharMap {
         &mut self.char_map
+    }
+
+    pub(crate) fn get_all_known_contained(&self) -> Vec<(&char, &CharInfo)> {
+        self.char_map
+            .iter()
+            .filter(|(key, value)| value.part_of_solution())
+            .collect()
+    }
+
+    pub(crate) fn has_all_known_contained(&self, guess: &Word) -> bool {
+        for needed_char in self.get_all_known_contained() {
+            if !guess.contains(*needed_char.0) {
+                return false;
+            }
+        }
+        true
     }
 }
 
@@ -62,7 +79,7 @@ impl CharInfo {
 
     #[must_use]
     pub fn part_of_solution(&self) -> bool {
-        self.occurences_amount.end > 0
+        self.occurences_amount.start > 0 && self.occurences_amount.end > 0
     }
 
     pub fn min_occurences(&mut self, min: usize) {
