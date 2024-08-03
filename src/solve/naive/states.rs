@@ -37,7 +37,7 @@ impl SolverState {
     pub(crate) fn get_all_known_contained(&self) -> Vec<(&char, &CharInfo)> {
         self.char_map
             .iter()
-            .filter(|(key, value)| value.part_of_solution())
+            .filter(|(_key, value)| value.part_of_solution())
             .collect()
     }
 
@@ -48,6 +48,28 @@ impl SolverState {
             }
         }
         true
+    }
+
+    pub(crate) fn start_step(&mut self) {}
+
+    pub(crate) fn finish_step(&mut self, abs_freq: &HashMap<char, usize>) {
+        for (k, v) in abs_freq {
+            if *v == 0 {
+                self.char_map
+                    .get_mut(k)
+                    .expect(
+                        "char in abs_freq was not added to the char_map before finalizing the step",
+                    )
+                    .max_occurences(0);
+            } else {
+                self.char_map
+                    .get_mut(k)
+                    .expect(
+                        "char in abs_freq was not added to the char_map before finalizing the step",
+                    )
+                    .min_occurences(*v);
+            }
+        }
     }
 }
 
