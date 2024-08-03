@@ -4,13 +4,14 @@ use libpt::log::{debug, error, info, trace};
 
 use crate::error::{SolverError, WResult};
 use crate::game::evaluation::{Evaluation, EvaluationUnit};
+use crate::game::response::Status;
 use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
-use super::{AnyBuiltinSolver, Solver, Status};
-
 mod states;
 use states::*;
+
+use super::{AnyBuiltinSolver, Solver};
 
 #[derive(Debug, Clone)]
 pub struct NaiveSolver<'wl, WL> {
@@ -37,9 +38,10 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
         let mut state: SolverState = SolverState::new();
         let responses = game.responses().iter().enumerate();
         for (_idx, response) in responses {
-            let mut already_found_amounts: HashMap<char, usize> = HashMap::new();
+            let mut abs_freq: HashMap<char, usize> = HashMap::new();
             let evaluation: &Evaluation = response.evaluation();
             for (idx, p) in evaluation.clone().into_iter().enumerate() {
+                state.start_step();
                 match p.1 {
                     Status::Matched => {
                         pattern.replace_range(idx..idx + 1, &p.0.to_string());
@@ -49,7 +51,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                             .entry(p.0)
                             .or_insert(CharInfo::new(game.length()))
                             .found_at(idx);
-                        *already_found_amounts.entry(p.0).or_default() += 1;
+                        *abs_freq.entry(p.0).or_default() += 1;
                     }
                     Status::Exists => {
                         let cinfo = state
@@ -57,16 +59,18 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                             .entry(p.0)
                             .or_insert(CharInfo::new(game.length()));
                         cinfo.tried_but_failed(idx);
-                        *already_found_amounts.entry(p.0).or_default() += 1;
-                        cinfo.min_occurences(already_found_amounts[&p.0]);
+                        *abs_freq.entry(p.0).or_default() += 1;
                     }
-                    Status::None => state
-                        .char_map_mut()
-                        .entry(p.0)
-                        .or_insert(CharInfo::new(game.length()))
-                        .max_occurences(*already_found_amounts.entry(p.0).or_default()),
+                    Status::None => {
+                        let cinfo = state
+                            .char_map_mut()
+                            .entry(p.0)
+                            .or_insert(CharInfo::new(game.length()));
+                        cinfo.tried_but_failed(idx);
+                    }
                 }
-                trace!("absolute frequencies: {already_found_amounts:?}");
+                trace!("absolute frequencies: {abs_freq:?}");
+                state.finish_step(&abs_freq);
             }
         }
 
