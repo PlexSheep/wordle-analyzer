@@ -47,11 +47,12 @@ fn test_eval_simple() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_eval_reoccuring_char() -> anyhow::Result<()> {
+fn test_eval_reoccuring_char0() -> anyhow::Result<()> {
     let wl = wordlist();
     let builder = game::Game::builder(&wl)
         .solution(Some(wl.get_word(&Word::from("nines")).unwrap()))
         .precompute(false);
+    info!("solution=nines");
 
     let mut game = builder.build()?;
     let guess = Word::from("pines");
@@ -101,6 +102,28 @@ fn test_eval_reoccuring_char() -> anyhow::Result<()> {
     let guess = Word::from("indie");
     game.guess(&guess, None)?;
     let correct = Evaluation::build(&guess, "ffxxf")?;
+    info!(
+        "{} =? {}",
+        *game.last_response().unwrap().evaluation(),
+        correct
+    );
+    assert_eq!(*game.last_response().unwrap().evaluation(), correct);
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_reoccuring_char1() -> anyhow::Result<()> {
+    let wl = wordlist();
+    let builder = game::Game::builder(&wl)
+        .solution(Some(wl.get_word(&Word::from("fatty")).unwrap()))
+        .precompute(false);
+    info!("solution=fatty");
+
+    let mut game = builder.build()?;
+    let guess = Word::from("state");
+    game.guess(&guess, None)?;
+    let correct = Evaluation::build(&guess, "xffcx")?;
     info!(
         "{} =? {}",
         *game.last_response().unwrap().evaluation(),

@@ -126,34 +126,60 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
 
     /// Generates an [Evaluation] for a given solution and guess.
     pub(crate) fn evaluate(solution: WordData, guess: &Word) -> Evaluation {
-        let mut evaluation = Vec::new();
+        let solution = solution.0;
+        let mut evaluation: Vec<(char, Status)> = vec![('!', Status::None); solution.len()];
         let mut status: Status;
-        let mut buf = solution.0.clone();
+        let mut buf: Vec<char> = solution.chars().collect();
 
-        for ((idx, c_guess), c_sol) in guess.chars().enumerate().zip(solution.0.chars()) {
+        #[cfg(debug_assertions)]
+        let buflen = solution.len();
+        #[cfg(debug_assertions)]
+        {
+            assert_eq!(buflen, buf.len());
+            assert_eq!(buflen, evaluation.len());
+        }
+
+        // first the correct solutions
+        for ((idx, c_guess), c_sol) in guess.chars().enumerate().zip(solution.chars()) {
             if c_guess == c_sol {
                 status = Status::Matched;
-                buf.replace_range(idx..idx + 1, "_");
-            } else if buf.contains(c_guess)
-                && buf
-                    .char_indices()
-                    .filter(|c| c.1 == c_guess)
-                    .filter(|c| {
-                        guess
-                            .chars()
-                            .nth(c.0)
-                            .expect("the evaluations are somehow different lengths")
-                            == c.1
-                    })
-                    .count()
-                    == 0
-            {
-                status = Status::Exists;
-                buf = buf.replacen(c_guess, "_", 1);
-            } else {
-                status = Status::None
+                buf[idx] = '!';
+                evaluation[idx] = (c_guess, status);
             }
-            evaluation.push((c_guess, status));
+        }
+
+        #[cfg(debug_assertions)]
+        {
+            assert_eq!(buflen, buf.len());
+            assert_eq!(buflen, evaluation.len());
+        }
+
+        // then check if the char exists, but was not guessed to be at the correct position
+        //
+        // We split this up, because finding the "exists" chars at the same time as the "correct"
+        // chars causes bugs
+        for ((idx, c_guess), c_sol) in guess.chars().enumerate().zip(solution.chars()) {
+            if c_guess == c_sol {
+                continue;
+            } else if buf.contains(&c_guess) {
+                status = Status::Exists;
+                // replace that char in the buffer to signal that is has been paired with the
+                // current char
+                let idx_of_a_match = buf
+                    .iter()
+                    .position(|c| *c == c_guess)
+                    .expect("did not find a character in a string even though we know it exists");
+                buf[idx_of_a_match] = '!';
+            } else {
+                status = Status::None;
+            }
+            evaluation[idx] = (c_guess, status);
+        }
+
+        #[cfg(debug_assertions)]
+        {
+            assert_eq!(buflen, buf.len());
+            assert_eq!(buflen, evaluation.len());
         }
         evaluation.into()
     }
