@@ -7,6 +7,8 @@ use wordle_analyzer::wlist::builtin::BuiltinWList;
 use wordle_analyzer::wlist::word::{Word, WordData};
 use wordle_analyzer::wlist::WordList;
 
+use rayon::prelude::*;
+
 fn wordlist() -> impl WordList {
     BuiltinWList::default()
 }
@@ -133,5 +135,21 @@ fn test_naive_play_predetermined_game_manually() -> anyhow::Result<()> {
     assert!(game.finished());
     assert!(game.won());
 
+    Ok(())
+}
+
+#[test]
+fn test_naive_win_games() -> anyhow::Result<()> {
+    let wl = wordlist();
+    let sl =
+        AnyBuiltinSolver::Naive(NaiveSolver::build(&wl).expect("could not build naive solver"));
+    let builder = Game::builder(&wl);
+
+    { 0..50 }.into_par_iter().for_each(|_round| {
+        let mut game = builder.build().expect("could not make game");
+        sl.play(&mut game).expect("could not play game");
+        assert!(game.finished());
+        assert!(game.won());
+    });
     Ok(())
 }
