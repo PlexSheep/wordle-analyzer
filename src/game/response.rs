@@ -92,17 +92,6 @@ impl GuessResponse {
 
 impl Display for GuessResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for s in self.evaluation.clone().into_iter() {
-            write!(
-                f,
-                "{}",
-                match s.1 {
-                    Status::None => s.0.to_string().into(),
-                    Status::Exists => s.0.to_string().yellow(),
-                    Status::Matched => s.0.to_string().green(),
-                }
-            )?;
-        }
-        std::fmt::Result::Ok(())
+        write!(f, "{}", self.evaluation())
     }
 }

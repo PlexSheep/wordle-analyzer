@@ -29,7 +29,6 @@ where
     solution: Option<WordData>,
     wordlist: &'wl WL,
     responses: Vec<GuessResponse>,
-    // TODO: keep track of the letters the user has tried
 }
 
 impl<'wl, WL: WordList> Game<'wl, WL> {
@@ -126,15 +125,29 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
     }
 
     /// Generates an [Evaluation] for a given solution and guess.
-    pub(crate) fn evaluate(mut solution: WordData, guess: &Word) -> Evaluation {
+    pub(crate) fn evaluate(solution: WordData, guess: &Word) -> Evaluation {
         let mut evaluation = Vec::new();
         let mut status: Status;
         let mut buf = solution.0.clone();
+
         for ((idx, c_guess), c_sol) in guess.chars().enumerate().zip(solution.0.chars()) {
             if c_guess == c_sol {
                 status = Status::Matched;
                 buf.replace_range(idx..idx + 1, "_");
-            } else if buf.contains(c_guess) {
+            } else if buf.contains(c_guess)
+                && buf
+                    .char_indices()
+                    .filter(|c| c.1 == c_guess)
+                    .filter(|c| {
+                        guess
+                            .chars()
+                            .nth(c.0)
+                            .expect("the evaluations are somehow different lengths")
+                            == c.1
+                    })
+                    .count()
+                    == 0
+            {
                 status = Status::Exists;
                 buf = buf.replacen(c_guess, "_", 1);
             } else {
@@ -359,16 +372,8 @@ impl<'wl, WL: WordList> Display for Game<'wl, WL> {
             self.step(),
             self.solution(),
         )?;
-        for s in self
-            .responses()
-            .iter()
-            .map(|v| v.evaluation().to_owned().colorized_display())
-        {
-            write!(f, "\"")?;
-            for si in s {
-                write!(f, "{si}")?;
-            }
-            write!(f, "\", ")?;
+        for s in self.responses() {
+            write!(f, "\"{s}\",")?;
         }
         Ok(())
     }

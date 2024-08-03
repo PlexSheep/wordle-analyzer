@@ -1,3 +1,7 @@
+use std::fmt::Display;
+use std::io::Write;
+
+use colored::Colorize;
 use libpt::cli::console::{style, StyledObject};
 
 use crate::wlist::word::Word;
@@ -15,21 +19,6 @@ pub struct Evaluation {
 }
 
 impl Evaluation {
-    /// Display the evaluation color coded
-    pub fn colorized_display(&self) -> Vec<StyledObject<String>> {
-        let mut buf = Vec::new();
-        for e in self.inner.iter() {
-            let mut c = style(e.0.to_string());
-            if e.1 == Status::Matched {
-                c = c.green();
-            } else if e.1 == Status::Exists {
-                c = c.yellow();
-            }
-            buf.push(c);
-        }
-        buf
-    }
-
     /// The first string is the word the evaluation is for, The second string defines how the
     /// characters of the first string match the solution.
     ///
@@ -106,5 +95,22 @@ impl From<Evaluation> for Word {
 impl From<&Evaluation> for Word {
     fn from(value: &Evaluation) -> Self {
         Word::from(value.inner.iter().map(|v| v.0).collect::<String>())
+    }
+}
+
+impl Display for Evaluation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for s in &self.inner {
+            write!(
+                f,
+                "{}",
+                match s.1 {
+                    Status::None => s.0.to_string().into(),
+                    Status::Exists => s.0.to_string().yellow(),
+                    Status::Matched => s.0.to_string().green(),
+                }
+            )?;
+        }
+        std::fmt::Result::Ok(())
     }
 }
