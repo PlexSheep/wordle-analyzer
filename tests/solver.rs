@@ -21,3 +21,19 @@ fn test_build_builtin_solvers() {
     let _naive_solver =
         AnyBuiltinSolver::Naive(NaiveSolver::build(&wl).expect("could not build naive solver"));
 }
+
+#[test]
+fn test_naive_win_games() -> anyhow::Result<()> {
+    let wl = wordlist();
+    let sl =
+        AnyBuiltinSolver::Naive(NaiveSolver::build(&wl).expect("could not build naive solver"));
+    let builder = Game::builder(&wl);
+
+    { 0..50 }.into_par_iter().for_each(|_round| {
+        let mut game = builder.build().expect("could not make game");
+        sl.play(&mut game).expect("could not play game");
+        assert!(game.finished());
+        assert!(game.won());
+    });
+    Ok(())
+}
