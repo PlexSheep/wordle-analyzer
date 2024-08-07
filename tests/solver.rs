@@ -85,49 +85,49 @@ fn test_naive_play_predetermined_game_manually() -> anyhow::Result<()> {
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("which"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xxfxx")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("their"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xxffx")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("being"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xfffx")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("since"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "fcfxf")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("lines"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xcccc")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("mines"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xcccc")?),
     )?;
 
     next_guess = sl.guess_for(&game)?;
     assert_eq!(next_guess, Word::from("wines"));
     game.guess(
-        next_guess.clone(),
+        &next_guess.clone(),
         Some(Evaluation::build(&next_guess, "xcccc")?),
     )?;
 

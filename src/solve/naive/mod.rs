@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use libpt::log::{debug, error, info, trace};
 
 use crate::error::{SolverError, WResult};
-use crate::game::evaluation::{Evaluation, EvaluationUnit};
+use crate::game::evaluation::{Evaluation};
 use crate::wlist::word::{Word, WordData};
 use crate::wlist::WordList;
 
