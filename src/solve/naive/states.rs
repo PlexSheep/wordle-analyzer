@@ -34,10 +34,17 @@ impl SolverState {
         &mut self.char_map
     }
 
+    pub(crate) fn get_all_known_bad(&self) -> Vec<(&char, &CharInfo)> {
+        self.char_map
+            .iter()
+            .filter(|(_key, value)| value.not_in_solution())
+            .collect()
+    }
+
     pub(crate) fn get_all_known_contained(&self) -> Vec<(&char, &CharInfo)> {
         self.char_map
             .iter()
-            .filter(|(_key, value)| value.part_of_solution())
+            .filter(|(_key, value)| value.known_part_of_solution())
             .collect()
     }
 
@@ -71,6 +78,15 @@ impl SolverState {
             }
         }
     }
+
+    pub(crate) fn has_wrong_chars(&self, guess: &Word) -> bool {
+        for needed_char in self.get_all_known_bad() {
+            if guess.contains(*needed_char.0) {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl CharInfo {
@@ -100,7 +116,12 @@ impl CharInfo {
     }
 
     #[must_use]
-    pub fn part_of_solution(&self) -> bool {
+    pub fn not_in_solution(&self) -> bool {
+        self.occurences_amount.end == 0
+    }
+
+    #[must_use]
+    pub fn known_part_of_solution(&self) -> bool {
         self.occurences_amount.start > 0 && self.occurences_amount.end > 0
     }
 
@@ -152,7 +173,7 @@ impl CharInfo {
 
 impl Debug for CharInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.part_of_solution() {
+        if !self.not_in_solution() {
             f.debug_struct("CharInfo")
                 .field("correct_idxs", &self.confirmed_indexes)
                 .field("amnt_occ", &self.occurences_amount)

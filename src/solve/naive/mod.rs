@@ -67,6 +67,7 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
                             .entry(p.0)
                             .or_insert(CharInfo::new(game.length()));
                         cinfo.tried_but_failed(idx);
+                        abs_freq.entry(p.0).or_default();
                     }
                 }
                 trace!("absolute frequencies: {abs_freq:?}");
@@ -91,6 +92,9 @@ impl<'wl, WL: WordList> Solver<'wl, WL> for NaiveSolver<'wl, WL> {
             .filter(|solution_candidate| {
                 if !game.responses().is_empty()
                     && !state.has_all_known_contained(&solution_candidate.0)
+                // we need these sometimes,
+                // because we can't just input gibberish
+                //&& !state.has_wrong_chars(&solution_candidate.0)
                 {
                     trace!("known cont:{:#?}", state.get_all_known_contained());
                     return false;
