@@ -64,3 +64,11 @@ test-log = { version = "0.2.16", default-features = false, features = [
 	"color",
 	"trace",
 ] }
+
+[[bench]]
+name = "solver_naive"
+harness = false
+
+[[bench]]
+name = "solver_stupid"
+harness = false

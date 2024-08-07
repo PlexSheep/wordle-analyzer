@@ -1,10 +1,8 @@
 use test_log::test; // set the log level with an envvar: `RUST_LOG=trace cargo test`
 
-use wordle_analyzer::game::evaluation::Evaluation;
 use wordle_analyzer::game::Game;
 use wordle_analyzer::solve::{AnyBuiltinSolver, NaiveSolver, Solver, StupidSolver};
 use wordle_analyzer::wlist::builtin::BuiltinWList;
-use wordle_analyzer::wlist::word::{Word, WordData};
 use wordle_analyzer::wlist::WordList;
 
 use rayon::prelude::*;
