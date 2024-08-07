@@ -131,14 +131,6 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         let mut status: Status;
         let mut buf: Vec<char> = solution.chars().collect();
 
-        #[cfg(debug_assertions)]
-        let buflen = solution.len();
-        #[cfg(debug_assertions)]
-        {
-            assert_eq!(buflen, buf.len());
-            assert_eq!(buflen, evaluation.len());
-        }
-
         // first the correct solutions
         for ((idx, c_guess), c_sol) in guess.chars().enumerate().zip(solution.chars()) {
             if c_guess == c_sol {
@@ -146,12 +138,6 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
                 buf[idx] = '!';
                 evaluation[idx] = (c_guess, status);
             }
-        }
-
-        #[cfg(debug_assertions)]
-        {
-            assert_eq!(buflen, buf.len());
-            assert_eq!(buflen, evaluation.len());
         }
 
         // then check if the char exists, but was not guessed to be at the correct position
@@ -174,12 +160,6 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
                 status = Status::None;
             }
             evaluation[idx] = (c_guess, status);
-        }
-
-        #[cfg(debug_assertions)]
-        {
-            assert_eq!(buflen, buf.len());
-            assert_eq!(buflen, evaluation.len());
         }
         evaluation.into()
     }
