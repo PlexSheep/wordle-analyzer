@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::ops::{Range, RangeBounds};
 
-use crate::error::WResult;
 use crate::wlist::word::Word;
 
 pub(crate) type CharMap = HashMap<char, CharInfo>;

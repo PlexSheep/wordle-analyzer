@@ -107,16 +107,16 @@ impl<'wl, WL: WordList> Game<'wl, WL> {
         if self.finished() || self.step > self.max_steps {
             return Err(GameError::TryingToPlayAFinishedGame);
         }
-        if self.wordlist.get_word(&guess).is_none() {
+        if self.wordlist.get_word(guess).is_none() {
             return Err(GameError::WordNotInWordlist(guess.to_string()));
         }
         self.step += 1;
 
         let response;
         if eval.is_some() && self.solution.is_none() {
-            response = GuessResponse::new(&guess, eval.unwrap(), self);
+            response = GuessResponse::new(guess, eval.unwrap(), self);
         } else if let Some(solution) = self.solution.clone() {
-            response = GuessResponse::new(&guess, Self::evaluate(solution, &guess), self);
+            response = GuessResponse::new(guess, Self::evaluate(solution, guess), self);
         } else {
             panic!("there is neither an evaluation nor a predefined solution for this guess");
         }
