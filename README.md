@@ -26,5 +26,6 @@ have to guess words by slowly guessing the letters contained in it.
 Included in this repository are the following wordlists:
 
 <!-- TODO: make sure this is properly cited -->
-* [3Blue1Brown Top English words](./data/wordlists/german_SUBTLEX-DE.json) --- [`./data/wordlists/en_US_3b1b_freq_map.json`](https://github.com/3b1b/videos/tree/master/_2022/wordle/data)
-* [~33.000 Common German Words](./data/wordlists/german_SUBTLEX-DE.json) --- [SUBTLEX-DE](https://osf.io/py9ba/files/osfstorage)
+* [`./data/wordlists/en_US_3b1b_freq_map.json`](./data/wordlists/en_US_3b1b_freq_map.json) --- [3Blue1Brown Top English words](https://github.com/3b1b/videos/tree/master/_2022/wordle/data)
+* [`./data/wordlists/german_SUBTLEX-DE_full.json`](./data/wordlists/german_SUBTLEX-DE_full.json) --- [SUBTLEX-DE ~33.000 Common German Words](https://osf.io/py9ba/files/osfstorage)
+* [`./data/wordlists/german_SUBTLEX-DE_small.json`](./data/wordlists/german_SUBTLEX-DE_small.json) --- [SUBTLEX-DE ~33.000 Common German Words (reduced to most common)](https://osf.io/py9ba/files/osfstorage)
