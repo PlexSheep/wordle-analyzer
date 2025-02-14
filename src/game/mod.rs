@@ -349,7 +349,7 @@ impl<'wl, WL: WordList> GameBuilder<'wl, WL> {
     }
 }
 
-impl<'wl, WL: WordList> Display for Game<'wl, WL> {
+impl<WL: WordList> Display for Game<'_, WL> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // TODO: make this actually useful
         // TODO: make this actually fancy
